@@ -1742,6 +1742,7 @@ creating the quadric for each flag */
     CB_STARTUP,
     CB_UPDATE,
     CB_VELOCITY,
+    CB_RESET,
     // CB_POSTUPDATE,
     __CB_TYPE_COUNT //!< must be the last entry: counts the number of types
   } callback_type_t;
@@ -2025,6 +2026,9 @@ by pose, in local coords */
 
   /** Calls CallCallback( CB_UPDATE ) */
   void CallUpdateCallbacks(void);
+
+// added by lucy 03/08/2023
+  void CallResetCallbacks(void);
 
   meters_t ModelHeight() const;
 

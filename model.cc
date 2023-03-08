@@ -320,6 +320,12 @@ void Model::InitControllers()
   CallCallbacks(CB_INIT);
 }
 
+// added by lucy 03/08/2023
+void Model::CallResetCallbacks(void)
+{
+  CallCallbacks(CB_RESET);
+}
+
 void Model::AddFlag(Flag *flag)
 {
   if (flag) {
