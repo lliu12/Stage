@@ -213,6 +213,35 @@ void World::Run()
   }
 }
 
+// run a single world trials times - added by lucy mar 9 2023
+void World::RunTrials(int trials)
+{
+  // first check whether there is a single gui world
+  bool found_gui = false;
+  FOR_EACH (world_it, world_set) {
+    found_gui |= (*world_it)->IsGUI();
+  }
+  if (found_gui && (world_set.size() != 1)) {
+    PRINT_WARN("When using the GUI only a single world can be simulated.");
+    exit(-1);
+  }
+
+  if (found_gui) {
+    for (int i = 0; i < trials; i++) {
+      while (Fl::first_window() && !PastQuitTime() && !World::quit_all) {
+        Fl::wait();
+      }
+      Reset();
+    }
+
+  } else {
+    for (int i = 0; i < trials; i++) {
+      while (!UpdateAll());
+      Reset();
+    }
+  }
+}
+
 bool World::UpdateAll()
 {
   bool quit(true);
@@ -471,12 +500,16 @@ void World::LoadWorldPostHook()
   putchar('\n');
 }
 
-// // added by lucy 03/03/2023. has not been run or tested
+// added by lucy 03/03/2023. has not been run or tested
 void World::Reset() {
   sim_time = 0;
+  updates = 0;
+
+  // quit_time = quit_time + quit_time; // just for debugging, remove this later
 
   FOR_EACH (it, models)
-    (*it)->InitControllers();
+    // (*it)->InitControllers();
+    (*it)->CallResetCallbacks();
 
 }
 

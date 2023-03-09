@@ -1045,6 +1045,9 @@ public:
 
   virtual ~World();
 
+  // run world for given number of trials - added by lucy 03/09/2023
+  virtual void RunTrials(int trials);
+
   /** Returns the current simulated time in this world, in microseconds. */
   usec_t SimTimeNow(void) const { return sim_time; }
   /** Returns a pointer to the currently-open worlddfile object, or
