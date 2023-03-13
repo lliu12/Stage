@@ -847,8 +847,11 @@ protected:
   std::set<Option *> option_table; ///< GUI options (toggles) registered by models
   std::list<PowerPack *>
       powerpack_list; ///< List of all the powerpacks attached to models in the world
-  /** World::quit is set true when this simulation time is reached */
+  /** World::quit is set true when a single trial has run for this long. */
   usec_t quit_time;
+  /** World::quit is set true when this simulation time is reached, ending a trial. Simulation time accumulates and does not reset between trials.*/
+  usec_t trial_quit_time;
+
   std::list<float *> ray_list; ///< List of rays traced for debug visualization
   usec_t sim_time; ///< the current sim time in this world in microseconds
   std::map<point_int_t, SuperRegion *> superregions;

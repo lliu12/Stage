@@ -137,7 +137,7 @@ World::World(const std::string &,
       worker_threads(1),
 
       // protected
-      cb_list(), extent(), graphics(false), option_table(), powerpack_list(), quit_time(0),
+      cb_list(), extent(), graphics(false), option_table(), powerpack_list(), quit_time(0), trial_quit_time(0),
       ray_list(), sim_time(0), superregions(), updates(0), wf(NULL), paused(false),
       event_queues(1), // use 1 thread by default
       pending_update_callbacks(), active_energy(), active_velocity(),
@@ -432,6 +432,8 @@ void World::LoadWorldPostHook()
 {
   this->quit_time = (usec_t)(million * wf->ReadFloat(0, "quit_time", this->quit_time));
 
+  this->trial_quit_time = this->quit_time;
+
   this->ppm = 1.0 / wf->ReadFloat(0, "resolution", 1.0 / this->ppm);
 
   this->show_clock = wf->ReadInt(0, "show_clock", this->show_clock);
@@ -502,10 +504,7 @@ void World::LoadWorldPostHook()
 
 // added by lucy 03/03/2023. has not been run or tested
 void World::Reset() {
-  sim_time = 0;
-  updates = 0;
-
-  // quit_time = quit_time + quit_time; // just for debugging, remove this later
+  trial_quit_time = trial_quit_time + quit_time;
 
   FOR_EACH (it, models)
     // (*it)->InitControllers();
@@ -534,7 +533,7 @@ void World::UnLoad()
 
 bool World::PastQuitTime()
 {
-  return ((quit_time > 0) && (sim_time >= quit_time));
+  return ((trial_quit_time > 0) && (sim_time >= trial_quit_time));
 }
 
 std::string World::ClockString() const
