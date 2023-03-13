@@ -31,24 +31,6 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
 {
   robot_t *robot = new robot_t();
 
-  // if (robot->already_initialized) { // if robot has been initialized before, reset everything to starting values (with new random locations, etc.)
-  //   // set values back to starting values
-  //   robot->goals_reached = 0;
-  //   robot->running = false;
-  //   robot->current_phase_count = 0;
-  //   robot->memory_index = 0;
-
-  //   // get new start goal locations 
-  //   gen_start_goal_positions(robot);
-
-  //   // wipe waypoints and memory vectors, then regenerate to new ones
-  //   std::vector<ModelPosition::Waypoint>().swap(robot->pos->waypoints);
-  //   std::vector<bool>().swap(robot->blocked_memory);
-  //   gen_robot_data(robot);
-  // }
-
-  // else { // otherwise if robot is new, set up from scratch
-  robot->already_initialized = true;
   // parse input params from worldfile
   cxxopts::Options options_wf("noise_random_goals", "traffic avoidance with variable noise");
   options_wf.add_options()
@@ -134,18 +116,17 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
   robot->pos->AddCallback(Model::CB_UPDATE, model_callback_t(PositionUpdate), robot);
   robot->pos->AddCallback(Model::CB_RESET, model_callback_t(Reset), robot);
   robot->pos->Subscribe(); // starts the position updates
-  // }
 
   return 0; // ok
 }
 
 int Reset(Model *, robot_t *robot) {
-  printf("reset function in controller called \n");
-  printf("pos b4 reset: [ %.4f %.4f %.4f ]\n", robot->pos->GetPose().x, robot->pos->GetPose().y, robot->pos->GetPose().a);
+  // printf("reset function in controller called \n");
+  // printf("pos b4 reset: [ %.4f %.4f %.4f ]\n", robot->pos->GetPose().x, robot->pos->GetPose().y, robot->pos->GetPose().a);
   robot->goals_reached = 0;
   robot->running = false;
   robot->current_phase_count = 0;
-  robot->memory_index = 0;
+  robot->near_boundary = calc_near_boundary(robot);
 
   // get new start goal locations 
   gen_start_goal_positions(robot);
@@ -155,7 +136,7 @@ int Reset(Model *, robot_t *robot) {
   std::vector<bool>().swap(robot->blocked_memory);
   gen_robot_data(robot);
 
-  printf("pos after reset: [ %.4f %.4f %.4f ]\n", robot->pos->GetPose().x, robot->pos->GetPose().y, robot->pos->GetPose().a);
+  // printf("pos after reset: [ %.4f %.4f %.4f ]\n", robot->pos->GetPose().x, robot->pos->GetPose().y, robot->pos->GetPose().a);
   return 0;
 }
 
