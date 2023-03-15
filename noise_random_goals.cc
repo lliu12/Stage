@@ -39,7 +39,7 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
     ("a, anglenoise", "Standard deviation of noise added to angles", cxxopts::value<double>()->default_value("0"))
     ("b, bias", "Bias of noise added to angles", cxxopts::value<double>()->default_value("0"))
     ("n, newgoals", "Keep generating new goals", cxxopts::value<bool>()) // implicit value is true
-    ("p, periodic", "Periodic boundary conditions?", cxxopts::value<bool>()) // implicit value is true
+    // ("p, periodic", "Periodic boundary conditions?", cxxopts::value<bool>()) // implicit value is true
     ("circle", "Generate goals in circle instead of square", cxxopts::value<bool>()) // implicit value is true
     ("u, r_upper", "Upper bound radius for goal generation (or s/2 for square)", cxxopts::value<double>())
     ("l, r_lower", "Lower bound radius for goal generation", cxxopts::value<double>()->default_value("0"))
@@ -54,7 +54,7 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
   robot->cruisespeed = result_wf["cruisespeed"].as<double>();
   robot->anglebias = result_wf["bias"].as<double>();
   robot->newgoals = result_wf["newgoals"].as<bool>();
-  robot->periodic = result_wf["periodic"].as<bool>();
+  // robot->periodic = result_wf["periodic"].as<bool>();
   robot->circle = result_wf["circle"].as<bool>();
   robot->r_lower = result_wf["r_lower"].as<double>();
   robot->r_upper = result_wf["r_upper"].as<double>();
@@ -63,6 +63,7 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
   robot->anglenoise = result_wf["anglenoise"].as<double>();
   robot->addtl_data = result_wf["data"].as<std::string>();
   robot->memory_length = result_wf["mem"].as<int>();
+  robot->periodic = mod->GetWorld()->IsPeriodic();
 
   cxxopts::Options options_cl("circle_random_goals", "pass commandline data into controller");
   options_cl.add_options()
@@ -245,11 +246,13 @@ int LaserUpdate(Model *, robot_t *robot)
     robot->pos->SetXSpeed(0);
   }
 
-  robot->near_boundary = calc_near_boundary(robot);
-  if (robot->periodic && (cur_pos.x < -s/2 || cur_pos.x > s/2 || cur_pos.y < -s/2 || cur_pos.y > s/2)) {
-    double x = fmod(cur_pos.x + s/2, s) - s/2;
-    double y = fmod(cur_pos.y + s/2, s) - s/2;
-    robot->pos->SetGlobalPose(Pose(x > -s/2 ? x : x + s, y > -s/2 ? y : y + s, cur_pos.z, cur_pos.a));
+  if (robot->periodic) {
+    robot->near_boundary = calc_near_boundary(robot);
+    if (cur_pos.x < -s/2 || cur_pos.x > s/2 || cur_pos.y < -s/2 || cur_pos.y > s/2) { // if out of bounds
+      double x = fmod(cur_pos.x + s/2, s) - s/2;
+      double y = fmod(cur_pos.y + s/2, s) - s/2;
+      robot->pos->SetGlobalPose(Pose(x > -s/2 ? x : x + s, y > -s/2 ? y : y + s, cur_pos.z, cur_pos.a));
+    }
   }
 
   robot->current_phase_count++;
