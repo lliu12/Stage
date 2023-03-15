@@ -25,6 +25,8 @@
     show_clock_interval     100
     threads                   1
 
+    periodic                  default false
+
     @endverbatim
 
     @par Details
@@ -70,6 +72,8 @@
     parallel-enabled high-resolution models, e.g. a laser with
     hundreds or thousands of samples, or lots of models. Defaults to
     1. Values of less than 1 will be forced to 1.
+
+    - periodic <bool>\n If true, the world has periodic boundary conditions. 
 
     @par More examples
     The Stage source distribution contains several example world files in
@@ -131,7 +135,7 @@ World::World(const std::string &,
       destroy(false),
       dirty(true), models(), models_by_name(), models_with_fiducials(), models_with_fiducials_byx(),
       models_with_fiducials_byy(), ppm(ppm), // raytrace resolution
-      quit(false), show_clock(false),
+      quit(false), show_clock(false), periodic(false),
       show_clock_interval(100), // 10 simulated seconds using defaults
       sync_mutex(), threads_working(0), threads_start_cond(), threads_done_cond(), total_subs(0),
       worker_threads(1),
@@ -142,7 +146,7 @@ World::World(const std::string &,
       event_queues(1), // use 1 thread by default
       pending_update_callbacks(), active_energy(), active_velocity(),
       sim_interval(1e5), // 100 msec has proved a good default
-      update_cb_count(0)
+      update_cb_count(0)   
 {
   if (!Stg::InitDone()) {
     PRINT_WARN("Stg::Init() must be called before a World is created.");
@@ -439,6 +443,8 @@ void World::LoadWorldPostHook()
   this->show_clock = wf->ReadInt(0, "show_clock", this->show_clock);
 
   this->show_clock_interval = wf->ReadInt(0, "show_clock_interval", this->show_clock_interval);
+
+  this->periodic = wf->ReadInt(0, "periodic", this->periodic);
 
   // read msec instead of usec: easier for user
   this->sim_interval = 1e3 * wf->ReadFloat(0, "interval_sim", this->sim_interval / 1e3);
@@ -996,6 +1002,11 @@ RaytraceResult World::Raytrace(const Ray &r)
 
         // rt_candidate_cells.push_back( point_int_t( ycrossx, ycrossy ));
       }
+      // PERIODIC MODIFICATION
+      // if (periodic and ray origin was close to boundary to begin with) {
+      //   globx = normalize globx to lie within periodic bounds;
+      //   globy = normalize globy to lie within periodic bounds;
+      // }
     }
     // rt_cells.push_back( point_int_t( globx, globy ));
   }

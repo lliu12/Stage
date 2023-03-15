@@ -829,6 +829,7 @@ quickly finding nearby fidcucials */
   bool quit; ///< quit this world ASAP
   bool show_clock; ///< iff true, print the sim time on stdout
   unsigned int show_clock_interval; ///< updates between clock outputs
+  bool periodic; ///< use periodic boundary conditions
 
   //--- thread sync ----
   pthread_mutex_t sync_mutex; ///< protect the worker thread management stuff
@@ -1060,6 +1061,9 @@ NULL if there is none. */
 class returns false, but subclasses can override this
 behaviour. */
   virtual bool IsGUI() const { return false; }
+
+  virtual bool IsPeriodic() const { return periodic; }
+
   /** Open the file at the specified location, create a Worldfile
 object, read the file and configure the world from the
 contents, creating models as necessary. The created object
