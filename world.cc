@@ -135,8 +135,9 @@ World::World(const std::string &,
       destroy(false),
       dirty(true), models(), models_by_name(), models_with_fiducials(), models_with_fiducials_byx(),
       models_with_fiducials_byy(), ppm(ppm), // raytrace resolution
-      quit(false), show_clock(false), periodic(false),
+      quit(false), show_clock(false), 
       show_clock_interval(100), // 10 simulated seconds using defaults
+      periodic(false), periodic_bounds(100),
       sync_mutex(), threads_working(0), threads_start_cond(), threads_done_cond(), total_subs(0),
       worker_threads(1),
 
@@ -445,6 +446,7 @@ void World::LoadWorldPostHook()
   this->show_clock_interval = wf->ReadInt(0, "show_clock_interval", this->show_clock_interval);
 
   this->periodic = wf->ReadInt(0, "periodic", this->periodic);
+  this->periodic_bounds = wf->ReadFloat(0, "periodic_bounds", this->periodic_bounds);
 
   // read msec instead of usec: easier for user
   this->sim_interval = 1e3 * wf->ReadFloat(0, "interval_sim", this->sim_interval / 1e3);
@@ -813,8 +815,8 @@ RaytraceResult World::Raytrace(const Ray &r)
   double globy(r.origin.y * ppm);
 
   // record our starting position
-  const double startx(globx);
-  const double starty(globy);
+  double startx(globx);
+  double starty(globy);
 
   // eliminate a potential divide by zero
   const double angle(r.origin.a == 0.0 ? 1e-12 : r.origin.a);
@@ -837,6 +839,23 @@ RaytraceResult World::Raytrace(const Ray &r)
   const int32_t by(2 * ay);
   int32_t exy(ay - ax); // difference between x and y distances
   int32_t n(ax + ay); // the manhattan distance to the goal cell
+
+  bool will_cross_boundary = false;
+  // determine whether ray will cross periodic boundaries
+  if (periodic) {
+    double pb = periodic_bounds * ppm;
+    double endx = startx + dx;
+    double endy = starty + dy;
+    // bool will_cross_boundary = (abs(startx - (-pb)) < r.range || abs(startx - pb) < r.range || abs(starty - (-pb)) < r.range || abs(starty - pb) < r.range);;
+    will_cross_boundary = (startx - pb) * (endx - pb) <= 0 || (startx + pb) * (endx + pb) <= 0 || (starty - pb) * (endy - pb) <= 0 || (starty + pb) * (endy + pb) <= 0;
+    if (will_cross_boundary) {
+      printf("\n\nThis ray will cross boundary: %s with angle %f at time %llu... \n", r.mod->Token(), r.origin.a, SimTimeNow());
+      printf("startx = %f, endx = %f \n", startx, endx);
+      printf("starty = %f, endy = %f \n", starty, endy);
+      printf("Ray progression: ");
+    }
+  }
+
 
   // the distances between region crossings in X and Y
   const double xjumpx(sx * REGIONWIDTH);
@@ -867,9 +886,19 @@ RaytraceResult World::Raytrace(const Ray &r)
     SuperRegion *sr(GetSuperRegion(point_int_t(GETSREG(globx), GETSREG(globy))));
     Region *reg(sr ? sr->GetRegion(GETREG(globx), GETREG(globy)) : NULL);
 
+    if (will_cross_boundary) {
+      printf("%f,", globx);
+      printf("region count %lu, ", reg->count);
+    }
+
     if (reg && reg->count) // if the region contains any objects
     {
       // assert( reg->cells.size() );
+
+      // if (will_cross_boundary) {
+      //   printf("ne %f,", globx);
+      //   // printf("region count %lu, ", reg->count);
+      // }
 
       // invalidate the region crossing points used to jump over
       // empty regions
@@ -885,6 +914,9 @@ RaytraceResult World::Raytrace(const Ray &r)
       // while within the bounds of this region and while some ray remains
       // we'll tweak the cell pointer directly to move around quickly
       while ((cx >= 0) && (cx < REGIONWIDTH) && (cy >= 0) && (cy < REGIONWIDTH) && n > 0) {
+        if (will_cross_boundary) {
+          printf("%f,", globx);
+        }
         FOR_EACH (it, c->blocks[layer]) {
           Block *block(*it);
           assert(block);
@@ -895,6 +927,7 @@ RaytraceResult World::Raytrace(const Ray &r)
 
           // test the predicate we were passed
           if ((*r.func)(&block->group->mod, r.mod, r.arg)) {
+      
             // a hit!
             result.pose = r.origin;
             result.mod = &block->group->mod;
@@ -905,8 +938,14 @@ RaytraceResult World::Raytrace(const Ray &r)
             else
               result.range = fabs((globy - starty) / sina) / ppm;
 
+            printf("%s got a hit with range %f \n", r.mod->Token(), result.range);
+
             return result;
           }
+
+          // else {
+          //   printf("%s scanned something but it was not a hit! \n", r.mod->Token());
+          // }
         }
 
         // increment our cell in the correct direction
@@ -1002,12 +1041,35 @@ RaytraceResult World::Raytrace(const Ray &r)
 
         // rt_candidate_cells.push_back( point_int_t( ycrossx, ycrossy ));
       }
-      // PERIODIC MODIFICATION
-      // if (periodic and ray origin was close to boundary to begin with) {
-      //   globx = normalize globx to lie within periodic bounds;
-      //   globy = normalize globy to lie within periodic bounds;
-      // }
+
     }
+
+    if (will_cross_boundary) {
+      // if (will_cross_boundary) {
+      //   printf("%f,", globx);
+      // }
+      // printf("in periodic raytrace check loop for %s at time %llu... \n", r.mod->Token(), SimTimeNow());
+      double s = periodic_bounds * 2 * ppm;
+      // printf("current ray pos for %s at time %llu: globx %f, globy %f, angle %f \n", r.mod->Token(), SimTimeNow(), globx, globy, r.origin.a);
+      if (globx < -s/2 || globx > s/2 || globy < -s/2 || globy > s/2) { // if out of bounds
+        // printf("wrapping ray to periodic boundaries for %s at time %llu... \n", r.mod->Token(), SimTimeNow());
+        // printf("before wrap: globx %f, globy %f \n", globx, globy);
+        // printf("globx %f, globy %f, ray angle %f \n", globx, globy, r.origin.a);
+
+
+        // record xshift, yshift and use to shift startx, starty
+        double globx_shift = fmod(globx + s/2, s) - s/2;
+        double globy_shift = fmod(globy + s/2, s) - s/2;
+        startx = startx + (globx_shift - globx);
+        starty = starty + (globy_shift - globy);
+        globx = globx_shift;
+        globy = globy_shift;
+        calculatecrossings = true;
+        // printf("after wrap: globx %f, globy %f \n", globx, globy);
+      }
+      // printf("%f,", globx);
+    }
+
     // rt_cells.push_back( point_int_t( globx, globy ));
   }
 

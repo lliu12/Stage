@@ -667,12 +667,22 @@ bool Model::AdjustPoseToFreeSpace(meters_t rad, size_t max_iter)
   size_t i = 0;
   Model *hitmod = TestCollision();
   while (hitmod && (max_iter <= 0 || i++ < max_iter)) {
-    meters_t dist = GetPose().Distance(hitmod->GetPose());
-    meters_t xdiff = GetPose().x - hitmod->GetPose().x;
-    meters_t ydiff = GetPose().y - hitmod->GetPose().y;
+    Pose cur_pos = GetPose();
+    Pose hit_pos = hitmod->GetPose();
+    meters_t dist = cur_pos.Distance(hit_pos);
+    meters_t xdiff = cur_pos.x - hit_pos.x;
+    meters_t ydiff = cur_pos.y - hit_pos.y;
     meters_t c = (2 * rad - dist) / dist;
-    Pose newpose = GetPose() + Pose(c * xdiff,c * ydiff,0,0);
-    SetGlobalPose(newpose);
+    Pose new_pos = Pose(cur_pos.x + c * xdiff, cur_pos.y + c * ydiff, 0, cur_pos.a);
+
+    // Pose adjust_pos = Pose(c * xdiff,c * ydiff,0,0);
+    // Pose new_pos = cur_pos + adjust_pos;
+    // printf("adjusting pose for %s \n", Token());
+    // cur_pos.Print("starting pose");
+    // adjust_pos.Print("added pose");
+    // new_pos.Print("now at pose");
+
+    SetGlobalPose(new_pos);
     hitmod = TestCollision();
   }
   return i <= max_iter; // return true if a free pose was found within max iterations

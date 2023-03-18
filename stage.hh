@@ -830,6 +830,8 @@ quickly finding nearby fidcucials */
   bool show_clock; ///< iff true, print the sim time on stdout
   unsigned int show_clock_interval; ///< updates between clock outputs
   bool periodic; ///< use periodic boundary conditions
+  float periodic_bounds; ///< x and y axis value where periodic bounds are enforced
+
 
   //--- thread sync ----
   pthread_mutex_t sync_mutex; ///< protect the worker thread management stuff
@@ -1063,6 +1065,7 @@ behaviour. */
   virtual bool IsGUI() const { return false; }
 
   virtual bool IsPeriodic() const { return periodic; }
+  virtual float PeriodicBounds() const { return periodic_bounds; }
 
   /** Open the file at the specified location, create a Worldfile
 object, read the file and configure the world from the
