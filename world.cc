@@ -846,14 +846,7 @@ RaytraceResult World::Raytrace(const Ray &r)
     double pb = periodic_bounds * ppm;
     double endx = startx + dx;
     double endy = starty + dy;
-    // bool will_cross_boundary = (abs(startx - (-pb)) < r.range || abs(startx - pb) < r.range || abs(starty - (-pb)) < r.range || abs(starty - pb) < r.range);;
     will_cross_boundary = (startx - pb) * (endx - pb) <= 0 || (startx + pb) * (endx + pb) <= 0 || (starty - pb) * (endy - pb) <= 0 || (starty + pb) * (endy + pb) <= 0;
-    if (will_cross_boundary) {
-      printf("\n\nThis ray will cross boundary: %s with angle %f at time %llu... \n", r.mod->Token(), r.origin.a, SimTimeNow());
-      printf("startx = %f, endx = %f \n", startx, endx);
-      printf("starty = %f, endy = %f \n", starty, endy);
-      printf("Ray progression: ");
-    }
   }
 
 
@@ -894,11 +887,6 @@ RaytraceResult World::Raytrace(const Ray &r)
     if (reg && reg->count) // if the region contains any objects
     {
       // assert( reg->cells.size() );
-
-      // if (will_cross_boundary) {
-      //   printf("ne %f,", globx);
-      //   // printf("region count %lu, ", reg->count);
-      // }
 
       // invalidate the region crossing points used to jump over
       // empty regions
@@ -942,10 +930,6 @@ RaytraceResult World::Raytrace(const Ray &r)
 
             return result;
           }
-
-          // else {
-          //   printf("%s scanned something but it was not a hit! \n", r.mod->Token());
-          // }
         }
 
         // increment our cell in the correct direction
@@ -1045,18 +1029,8 @@ RaytraceResult World::Raytrace(const Ray &r)
     }
 
     if (will_cross_boundary) {
-      // if (will_cross_boundary) {
-      //   printf("%f,", globx);
-      // }
-      // printf("in periodic raytrace check loop for %s at time %llu... \n", r.mod->Token(), SimTimeNow());
       double s = periodic_bounds * 2 * ppm;
-      // printf("current ray pos for %s at time %llu: globx %f, globy %f, angle %f \n", r.mod->Token(), SimTimeNow(), globx, globy, r.origin.a);
       if (globx < -s/2 || globx > s/2 || globy < -s/2 || globy > s/2) { // if out of bounds
-        // printf("wrapping ray to periodic boundaries for %s at time %llu... \n", r.mod->Token(), SimTimeNow());
-        // printf("before wrap: globx %f, globy %f \n", globx, globy);
-        // printf("globx %f, globy %f, ray angle %f \n", globx, globy, r.origin.a);
-
-
         // record xshift, yshift and use to shift startx, starty
         double globx_shift = fmod(globx + s/2, s) - s/2;
         double globy_shift = fmod(globy + s/2, s) - s/2;
@@ -1065,9 +1039,7 @@ RaytraceResult World::Raytrace(const Ray &r)
         globx = globx_shift;
         globy = globy_shift;
         calculatecrossings = true;
-        // printf("after wrap: globx %f, globy %f \n", globx, globy);
       }
-      // printf("%f,", globx);
     }
 
     // rt_cells.push_back( point_int_t( globx, globy ));
