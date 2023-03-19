@@ -846,6 +846,7 @@ RaytraceResult World::Raytrace(const Ray &r)
     double pb = periodic_bounds * ppm;
     double endx = startx + dx;
     double endy = starty + dy;
+    // bool will_cross_boundary = (abs(startx - (-pb)) < r.range || abs(startx - pb) < r.range || abs(starty - (-pb)) < r.range || abs(starty - pb) < r.range);;
     will_cross_boundary = (startx - pb) * (endx - pb) <= 0 || (startx + pb) * (endx + pb) <= 0 || (starty - pb) * (endy - pb) <= 0 || (starty + pb) * (endy + pb) <= 0;
   }
 
@@ -879,15 +880,8 @@ RaytraceResult World::Raytrace(const Ray &r)
     SuperRegion *sr(GetSuperRegion(point_int_t(GETSREG(globx), GETSREG(globy))));
     Region *reg(sr ? sr->GetRegion(GETREG(globx), GETREG(globy)) : NULL);
 
-    if (will_cross_boundary) {
-      printf("%f,", globx);
-      printf("region count %lu, ", reg->count);
-    }
-
     if (reg && reg->count) // if the region contains any objects
     {
-      // assert( reg->cells.size() );
-
       // invalidate the region crossing points used to jump over
       // empty regions
       calculatecrossings = true;
@@ -902,9 +896,6 @@ RaytraceResult World::Raytrace(const Ray &r)
       // while within the bounds of this region and while some ray remains
       // we'll tweak the cell pointer directly to move around quickly
       while ((cx >= 0) && (cx < REGIONWIDTH) && (cy >= 0) && (cy < REGIONWIDTH) && n > 0) {
-        if (will_cross_boundary) {
-          printf("%f,", globx);
-        }
         FOR_EACH (it, c->blocks[layer]) {
           Block *block(*it);
           assert(block);
@@ -925,11 +916,12 @@ RaytraceResult World::Raytrace(const Ray &r)
               result.range = fabs((globx - startx) / cosa) / ppm;
             else
               result.range = fabs((globy - starty) / sina) / ppm;
-
-            printf("%s got a hit with range %f \n", r.mod->Token(), result.range);
-
             return result;
           }
+
+          // else {
+          //   printf("%s scanned something but it was not a hit! \n", r.mod->Token());
+          // }
         }
 
         // increment our cell in the correct direction
@@ -1034,6 +1026,8 @@ RaytraceResult World::Raytrace(const Ray &r)
         // record xshift, yshift and use to shift startx, starty
         double globx_shift = fmod(globx + s/2, s) - s/2;
         double globy_shift = fmod(globy + s/2, s) - s/2;
+        globx_shift = globx_shift > -s/2 ? globx_shift : globx_shift + s;
+        globy_shift = globy_shift > -s/2 ? globy_shift : globy_shift + s;
         startx = startx + (globx_shift - globx);
         starty = starty + (globy_shift - globy);
         globx = globx_shift;
