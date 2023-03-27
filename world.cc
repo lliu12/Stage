@@ -848,8 +848,14 @@ RaytraceResult World::Raytrace(const Ray &r)
     double endy = starty + dy;
     // bool will_cross_boundary = (abs(startx - (-pb)) < r.range || abs(startx - pb) < r.range || abs(starty - (-pb)) < r.range || abs(starty - pb) < r.range);;
     will_cross_boundary = (startx - pb) * (endx - pb) <= 0 || (startx + pb) * (endx + pb) <= 0 || (starty - pb) * (endy - pb) <= 0 || (starty + pb) * (endy + pb) <= 0;
+  
+    // if (will_cross_boundary) {
+    //   printf("\n\nThis ray will cross boundary: %s with angle %f at time %llu... \n", r.mod->Token(), r.origin.a, SimTimeNow() / 100000);
+    //   printf("startx = %f, endx = %f \n", startx, endx);
+    //   printf("starty = %f, endy = %f \n", starty, endy);
+    //   printf("Ray progression: ");
+    // }
   }
-
 
   // the distances between region crossings in X and Y
   const double xjumpx(sx * REGIONWIDTH);
@@ -880,8 +886,15 @@ RaytraceResult World::Raytrace(const Ray &r)
     SuperRegion *sr(GetSuperRegion(point_int_t(GETSREG(globx), GETSREG(globy))));
     Region *reg(sr ? sr->GetRegion(GETREG(globx), GETREG(globy)) : NULL);
 
-    if (reg && reg->count) // if the region contains any objects
+    // if (reg && reg->count) // if the region contains any objects
+    if (reg && reg->count)
     {
+
+      // if (will_cross_boundary) {
+      //   printf("ne %f,", globx);
+      //   // printf("region count %lu, ", reg->count);
+      // }
+
       // invalidate the region crossing points used to jump over
       // empty regions
       calculatecrossings = true;
@@ -916,6 +929,11 @@ RaytraceResult World::Raytrace(const Ray &r)
               result.range = fabs((globx - startx) / cosa) / ppm;
             else
               result.range = fabs((globy - starty) / sina) / ppm;
+
+            // if (will_cross_boundary) {
+            //   printf("hit range %f,", result.range);
+            // }
+            
             return result;
           }
 
@@ -940,11 +958,23 @@ RaytraceResult World::Raytrace(const Ray &r)
         }
         --n; // decrement the manhattan distance remaining
 
+        if (will_cross_boundary) {
+          double s = periodic_bounds * 2 * ppm;
+          if (globx < -s/2 || globx > s/2 || globy < -s/2 || globy > s/2) { // if out of bounds
+            break;
+          }
+        }
         // rt_cells.push_back( point_int_t( globx, globy ));
       }
       // printf( "leaving populated region\n" );
     } else // jump over the empty region
     {
+
+      // if (will_cross_boundary) {
+      //   printf("e %f,", globx);
+      //   // printf("region count %lu, ", reg->count);
+      // }
+
       // on the first run, and when we've been iterating over
       // cells, we need to calculate the next crossing of a region
       // boundary along each axis
