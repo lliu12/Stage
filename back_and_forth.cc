@@ -139,8 +139,5 @@ int LaserUpdate(Model *, robot_t *robot)
 int PositionUpdate(Model *, robot_t *robot)
 {
   Pose pose = robot->pos->GetPose();
-
-//   printf("Pose: [%.2f %.2f %.2f %.2f]\n", pose.x, pose.y, pose.z, pose.a);
-
   return 0; // run again
 }

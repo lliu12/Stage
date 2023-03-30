@@ -1,5 +1,5 @@
-// Not a great name - same as the other noise controller, but instead of storing a memory vector,
-// In this one, frustration at each step is updated according to a rule that depends on only that step
+// travel towards goal noisily, stop moving forward to avoid collisions
+// stores a memory vector of whether robot was blocked or not
 
 // #include "stage.hh"
 #include "/Users/lucyliu/stg/include/Stage-4.3/stage.hh"
@@ -8,6 +8,7 @@
 #include <random>
 #include <chrono>
 #include <fstream>
+// #include <cstdlib> 
 
 using namespace Stg;
 
@@ -19,8 +20,8 @@ struct robot_t : base_robot{ // base_robot imported from controller_utils
   bool near_boundary; // is robot within stopdist of boundary
   int current_phase_count, avg_runsteps, runsteps, tumblesteps; // time so far spent running or tumbling, total length of a run or tumble period
   double anglenoise, goal_angle, anglebias;
-  float frustration;
-  float df_blocked, df_free, f_threshold;
+  std::vector<bool> blocked_memory;
+  unsigned int memory_index, memory_length, blocked_count;
   bool random_runsteps;
 };
 typedef struct robot_t robot_t;
@@ -39,26 +40,26 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
   options_wf.add_options()
     ("s, stopdist", "Stop moving when obstacle detected within this distance", cxxopts::value<double>())
     ("c, cruisespeed", "Speed when no close obstacle", cxxopts::value<double>())
-    ("a, anglenoise", "STD when random noise is added to tumble goal angles", cxxopts::value<double>()->default_value("0"))
+    ("a, anglenoise", "Standard deviation of noise added to angles", cxxopts::value<double>()->default_value("0"))
     ("b, bias", "Bias of noise added to angles", cxxopts::value<double>()->default_value("0"))
     ("n, newgoals", "Keep generating new goals", cxxopts::value<bool>()) // implicit value is true
+    // ("p, periodic", "Periodic boundary conditions?", cxxopts::value<bool>()) // implicit value is true
     ("circle", "Generate goals in circle instead of square", cxxopts::value<bool>()) // implicit value is true
     ("u, r_upper", "Upper bound radius for goal generation (or s/2 for square)", cxxopts::value<double>())
     ("l, r_lower", "Lower bound radius for goal generation", cxxopts::value<double>()->default_value("0"))
     ("r, runsteps", "Total steps in a run phase", cxxopts::value<int>())
     ("random_runsteps", "Randomize runsteps each phase (average is the runsteps passed above)", cxxopts::value<bool>()) // implicit value is true
     ("t, tumblesteps", "Total steps in a tumble phase", cxxopts::value<int>())
-    // ("mem", "Length of memory stored", cxxopts::value<int>())
+    ("mem", "Length of memory stored", cxxopts::value<int>())
     ("d, data", "Data in string form to append to any data outputs", cxxopts::value<std::string>()->default_value(""))
-    ("df_blocked", "Change in frustration if robot is blocked", cxxopts::value<double>())
-    ("df_free", "Change in frustration if robot is not blocked", cxxopts::value<double>())
-    ("f_threshold", "Frustration threshold above which robot should take random angles", cxxopts::value<double>())
     ;
 
   auto result_wf = cast_args(options_wf, &args->worldfile[0]);
   robot->stopdist = result_wf["stopdist"].as<double>();
   robot->cruisespeed = result_wf["cruisespeed"].as<double>();
+  robot->anglebias = result_wf["bias"].as<double>();
   robot->newgoals = result_wf["newgoals"].as<bool>();
+  // robot->periodic = result_wf["periodic"].as<bool>();
   robot->circle = result_wf["circle"].as<bool>();
   robot->r_lower = result_wf["r_lower"].as<double>();
   robot->r_upper = result_wf["r_upper"].as<double>();
@@ -67,17 +68,13 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
   robot->avg_runsteps = result_wf["runsteps"].as<int>();
   robot->random_runsteps = result_wf["random_runsteps"].as<bool>();
   robot->tumblesteps = result_wf["tumblesteps"].as<int>();
-
-  robot->df_blocked = result_wf["df_blocked"].as<double>();
-  robot->df_free = result_wf["df_free"].as<double>();
-  robot->f_threshold = result_wf["f_threshold"].as<double>();
-
+  
   robot->anglenoise = result_wf["anglenoise"].as<double>();
-  robot->anglebias = result_wf["bias"].as<double>();
   robot->addtl_data = result_wf["data"].as<std::string>();
+  robot->memory_length = result_wf["mem"].as<int>();
   robot->periodic = mod->GetWorld()->IsPeriodic();
 
-  cxxopts::Options options_cl("noise_random_goals", "pass commandline data into controller");
+  cxxopts::Options options_cl("circle_random_goals", "pass commandline data into controller");
   options_cl.add_options()
     ("o, outfile", "file to save data to", cxxopts::value<std::string>()->default_value(""))
     ("d, data", "Data in string form to append to any data outputs", cxxopts::value<std::string>()->default_value(""))
@@ -94,7 +91,8 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
   robot->goals_reached = 0;
   robot->running = false;
   robot->current_phase_count = 0;
-  robot->frustration = 0;
+  double s = 2 * robot->r_upper;
+  Pose cur_pos = robot->pos->GetPose();
   robot->near_boundary = calc_near_boundary(robot);
 
   // set up range finder
@@ -122,7 +120,12 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
   robot->laser->Subscribe();
 
   gen_start_goal_positions(robot); // generate start and goal positions
-  gen_waypoint_data(robot); // set up vectors for storing waypoint history, memory
+  gen_waypoint_data(robot); // set up vectors for storing waypoint history
+
+  robot->memory_index = 0;
+  std::vector<bool> mem_vec(robot->memory_length, 0);
+  robot->blocked_memory = mem_vec;
+  robot->blocked_count = 0;
   
   robot->pos->AddCallback(Model::CB_UPDATE, model_callback_t(PositionUpdate), robot);
   robot->pos->AddCallback(Model::CB_RESET, model_callback_t(Reset), robot);
@@ -138,17 +141,37 @@ int Reset(Model *, robot_t *robot) {
   robot->running = false;
   robot->current_phase_count = 0;
   robot->near_boundary = calc_near_boundary(robot);
-  robot->frustration = 0;
 
   // get new start goal locations 
   gen_start_goal_positions(robot);
 
   // wipe waypoints and memory vectors, then regenerate to new ones
   std::vector<ModelPosition::Waypoint>().swap(robot->pos->waypoints);
+  std::vector<bool>().swap(robot->blocked_memory);
   gen_waypoint_data(robot);
+
+  robot->memory_index = 0;
+  std::vector<bool> mem_vec(robot->memory_length, 0);
+  robot->blocked_memory = mem_vec;
+  robot->blocked_count = 0;
 
   // printf("pos after reset: [ %.4f %.4f %.4f ]\n", robot->pos->GetPose().x, robot->pos->GetPose().y, robot->pos->GetPose().a);
   return 0;
+}
+
+/** If memory_interval has passed since last update, record whether robot is currently blocked. */
+inline void memory_update(robot_t *robot) {
+  if (robot->memory_length > 0 && robot->pos->GetWorld()->SimTimeNow() % robot->memory_interval == 0) {
+    robot->blocked_count -= int(robot->blocked_memory[robot->memory_index]);
+    robot->blocked_count += int(robot->stop);
+    robot->blocked_memory[robot->memory_index] = robot->stop;
+    robot->memory_index++; // increment index of current location in memory vector
+    robot->memory_index %= robot->memory_length;
+
+    if (robot->verbose) {
+      printf("Memory updated for %s at %llu seconds to %u / %u blocked. \n", robot->pos->Token(), robot->pos->GetWorld()->SimTimeNow() / 1000000, robot->blocked_count, robot->memory_length);
+    }
+  }
 }
 
 // inspect the ranger data and decide what to do
@@ -171,21 +194,21 @@ int LaserUpdate(Model *, robot_t *robot)
   double s = 2 * robot->r_upper;
   Pose cur_pos = robot->pos->GetPose();
 
-  if (robot->pos->GetWorld()->SimTimeNow() % robot->memory_interval == 0) {
-    float df = (robot->stop ? robot->df_blocked : robot->df_free);
-    robot->frustration = robot->frustration + df;
-  }
+  memory_update(robot);
 
   // updates for if the goal has been reached
   if (robot->pos->GetPose().Distance(robot->goal_pos) < tol) {
     if (robot->outfile_name != "NULL" && !robot->outfile_name.empty()) {
       robot->outfile.open(robot->outfile_name, std::ios_base::app);
-      robot->outfile << (std::string("goal") + std::string(",") + std::to_string(robot->pos->GetWorld()->SimTimeNow()) + std::string(",") + std::string(robot->pos->Token()) + std::string(",") + std::to_string(robot->frustration) + std::string(",") + robot->addtl_data) << std::endl;
+      float frustration = (robot->memory_length == 0 ? 1 : float(robot->blocked_count) / float(robot->memory_length));
+      robot->outfile << (std::string("goal") + std::string(",") + std::to_string(robot->pos->GetWorld()->SimTimeNow()) + std::string(",") + std::string(robot->pos->Token()) + std::string(",") + std::to_string(frustration) + std::string(",") + robot->addtl_data) << std::endl;
       robot->outfile.close();
     }
     goal_updates(robot);
   }
-    
+
+
+
   // check if current run or tumble phase is over
   if (robot->current_phase_count >= (robot->running ? robot->runsteps : robot->tumblesteps)) {
     robot->running = !robot->running;
@@ -207,11 +230,11 @@ int LaserUpdate(Model *, robot_t *robot)
 
     // if a new tumble phase is beginning, set goal angle
     if (!robot->running && robot->current_phase_count == 0) {
+      // set goal_angle
       Pose goal_pos;
       if (!robot->periodic) {
         goal_pos = robot->goal_pos;
       }
-      // if space is periodic, figure out where robot should move to for shortest path to goal
       else {
         double s = 2 * robot->r_upper;
         double xs [9] = {-s, -s, -s, 0, 0, 0, s, s, s};
@@ -227,7 +250,6 @@ int LaserUpdate(Model *, robot_t *robot)
             closest_pos = i;
           }
         }
-
         goal_pos = Pose(robot->goal_pos.x + xs[closest_pos], robot->goal_pos.y + ys[closest_pos], 0, 0);
       }
       
@@ -235,14 +257,9 @@ int LaserUpdate(Model *, robot_t *robot)
       double y_error = goal_pos.y - robot->pos->GetPose().y;
       double goal_angle = atan2(y_error, x_error);
 
-      // no angle bias in current implementation!
-      if (robot->frustration > robot->f_threshold) {
-        robot->goal_angle =  2 * M_PI * (drand48() - .5);
-      }
-      else {
-        std::normal_distribution<double> distribution(0, robot->anglenoise);
-        robot->goal_angle = normalize(goal_angle += distribution(generator));
-      }
+      float frustration = (robot->memory_length == 0 ? 1 : float(robot->blocked_count) / float(robot->memory_length));
+      std::normal_distribution<double> distribution(robot->anglebias * frustration, robot->anglenoise * frustration);
+      robot->goal_angle = normalize(goal_angle += distribution(generator));
     }
   }
   
