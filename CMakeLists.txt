@@ -14,6 +14,7 @@ set( stageSrcs
 	logentry.cc
 	model.cc
 	model_actuator.cc
+	data_collector.cc
 	model_blinkenlight.cc
 	model_blobfinder.cc
 	model_bumper.cc

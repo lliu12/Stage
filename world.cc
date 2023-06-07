@@ -241,7 +241,8 @@ void World::RunTrials(int trials)
 
   } else {
     for (int i = 0; i < trials; i++) {
-      while (!UpdateAll());
+      // while (!UpdateAll());
+      while(!this->Update());
       Reset();
     }
   }

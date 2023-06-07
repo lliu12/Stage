@@ -84,6 +84,7 @@ class OptionsDlg;
 class Camera;
 class FileManager;
 class Option;
+class DataCollector;
 
 typedef Model *(*creator_t)(World *, Model *, const std::string &type);
 
@@ -768,6 +769,7 @@ public:
   friend class ModelFiducial;
   friend class Canvas;
   friend class WorkerThread;
+  friend class DataCollector;
 
 public:
   /** contains the command line arguments passed to Stg::Init(), so
@@ -1676,6 +1678,7 @@ class Model : public Ancestor {
   friend class PowerPack;
   friend class Ray;
   friend class ModelFiducial;
+  friend class DataCollector;
 
 private:
   /** the number of models instatiated - used to assign unique sequential IDs */
@@ -2964,6 +2967,17 @@ the goal pose */
   double GetMinPosition() const { return min_position; }
   ActuatorType GetType() const { return actuator_type; }
   point3_t GetAxis() const { return axis; }
+};
+
+// Added by LL 6/6/2023
+// Collect data about models in a world
+class DataCollector {
+public:
+  //// Constructor
+  DataCollector();
+  //// Destructor
+  ~DataCollector();
+  int GetNumRobots(World *world);
 };
 
 } // end namespace stg
