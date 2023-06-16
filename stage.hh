@@ -54,6 +54,7 @@
 #include <queue>
 #include <set>
 #include <vector>
+#include <fstream>
 
 // FLTK Gui includes
 #include <FL/Fl.H>
@@ -1712,6 +1713,7 @@ public:
     cb_t(model_callback_t cb, void *arg) : callback(cb), arg(arg) {}
     cb_t(world_callback_t cb, void *arg) : callback(NULL), arg(arg) { (void)cb; }
     cb_t() : callback(NULL), arg(NULL) {}
+
     /** for placing in a sorted container */
     bool operator<(const cb_t &other) const
     {
@@ -2972,12 +2974,21 @@ the goal pose */
 // Added by LL 6/6/2023
 // Collect data about models in a world
 class DataCollector {
-public:
-  //// Constructor
-  DataCollector();
-  //// Destructor
-  ~DataCollector();
-  int GetNumRobots(World *world);
+  protected:
+  std::ofstream *outfile;
+  int steps_between_samples;
+
+  public:
+    //// Constructor
+    DataCollector(std::ofstream *ofile, int sample_steps = 100);
+    //// Destructor
+    ~DataCollector();
+
+  // Get integer statistics about a given world
+  int CountNumRobots(World *world);
+  int CountBlockedRobots(World *world);
+  void SimWorldCountBlocked(World *world, int trials);
+  std::string GetAddtlData(World *world);
 };
 
 } // end namespace stg
