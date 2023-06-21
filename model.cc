@@ -264,9 +264,9 @@ Model::Model(World *world, Model *parent, const std::string &type, const std::st
     if (parent) {
       snprintf(buf, 2048, "%s.%s:%u", parent->Token(), type.c_str(),
                parent->child_type_counts[type]);
-    } else // no parent, so use the count of this type in the world
+    } else // no parent, so use the count of this type in the world (plus 1)
     {
-      snprintf(buf, 2048, "%s:%u", type.c_str(), world->child_type_counts[type]);
+      snprintf(buf, 2048, "%s:%u", type.c_str(), world->child_type_counts[type] + 1);
     }
 
     // printf( "generated name %s\n", buf );
