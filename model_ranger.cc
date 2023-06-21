@@ -274,8 +274,6 @@ void ModelRanger::Sensor::Visualize(ModelRanger::Vis *vis, ModelRanger *rgr) con
 
   Gl::pose_shift(pose);
 
-  const double sample_fov = fov / sample_count;
-  
   if (vis->showTransducers) {
     rgr->PushColor(color);    
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -305,7 +303,7 @@ void ModelRanger::Sensor::Visualize(ModelRanger::Vis *vis, ModelRanger *rgr) con
 	  glVertex2f( 0,0 );
 	  
 	  for (size_t s(0); s < sample_count; s++) {
-	    const double ray_angle = (((double)s)-0.5) * sample_fov - fov / 2.0;      
+      const double ray_angle = ((double)s) * fov / (sample_count - 1) - fov / 2.0;   
 	    const GLfloat x = range.max * cos(ray_angle);
 	    const GLfloat y = range.max * sin(ray_angle);
 	    
@@ -336,7 +334,7 @@ void ModelRanger::Sensor::Visualize(ModelRanger::Vis *vis, ModelRanger *rgr) con
     verts[2].y = sidelen * sin(+da);
   } else {
     for (size_t s(0); s < sample_count; s++) {
-      const double ray_angle = (((double)s)-0.5) * sample_fov - fov / 2.0;
+      const double ray_angle = ((double)s) * fov / (sample_count - 1) - fov / 2.0;   
       verts[s].x = (float)(ranges[s] * cos(ray_angle));
       verts[s].y = (float)(ranges[s] * sin(ray_angle));
     }
