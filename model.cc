@@ -260,10 +260,10 @@ Model::Model(World *world, Model *parent, const std::string &type, const std::st
 
     // prefix with parent name if any, followed by the type name
     // with a suffix of a colon and the parent's number of children
-    // of this type
+    // of this type (plus 1)
     if (parent) {
       snprintf(buf, 2048, "%s.%s:%u", parent->Token(), type.c_str(),
-               parent->child_type_counts[type]);
+               parent->child_type_counts[type] + 1);
     } else // no parent, so use the count of this type in the world (plus 1)
     {
       snprintf(buf, 2048, "%s:%u", type.c_str(), world->child_type_counts[type] + 1);
