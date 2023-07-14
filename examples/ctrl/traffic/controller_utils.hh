@@ -1,25 +1,26 @@
 #include "/Users/lucyliu/stg/include/Stage-4.3/stage.hh"
+#include "/Users/lucyliu/stage4/Stage/examples/ctrl/circles/base_robot.hh"
 #include <cxxopts.hpp>
 #include <random>
 #include <chrono>
-#include <fstream>
 using namespace Stg;
 
 
-struct base_robot {
-  ModelPosition *pos;
-  ModelRanger *laser;
-  int goals_reached;
-  Pose start_pos, goal_pos;
-  bool stop;
-  double stopdist, cruisespeed, r_lower, r_upper;
-  // bool newgoals; // if yes, keep generating new goals for robot. else, move b&f between initial start and goal
-  std::string outfile_name, addtl_data; 
-  std::ofstream outfile;
-  bool verbose, newgoals, periodic, circle;
-  uint64_t memory_interval = 1000000;
-};
-typedef struct base_robot base_robot;
+
+// struct base_robot {
+//   ModelPosition *pos;
+//   ModelRanger *laser;
+//   int goals_reached;
+//   Pose start_pos, goal_pos;
+//   bool stop;
+//   double stopdist, cruisespeed, r_lower, r_upper;
+//   // bool newgoals; // if yes, keep generating new goals for robot. else, move b&f between initial start and goal
+//   std::string outfile_name, addtl_data; 
+//   std::ofstream outfile;
+//   bool verbose, newgoals, periodic, circle;
+//   uint64_t memory_interval = 1000000;
+// };
+// typedef struct base_robot base_robot;
 
 // Use rejection sampling to get a random point in a the ring between radius r_lower and r_upper (center at origin)
 Pose random_goal(double r_lower, double r_upper, base_robot *robot) {

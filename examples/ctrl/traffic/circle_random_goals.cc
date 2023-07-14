@@ -39,7 +39,7 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
     ("n, newgoals", "Keep generating new goals", cxxopts::value<bool>())
     ("u, r_upper", "Upper bound radius for goal generation", cxxopts::value<double>())
     ("l, r_lower", "Lower bound radius for goal generation", cxxopts::value<double>()->default_value("0"))
-    ("mem", "Length of memory", cxxopts::value<int>())
+    // ("mem", "Length of memory", cxxopts::value<int>())
     ("d, data", "Data in string form to append to any data outputs", cxxopts::value<std::string>()->default_value(""))
     ;
 
@@ -52,7 +52,7 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
   robot->newgoals = result_wf["newgoals"].as<bool>();
   robot->r_lower = result_wf["r_lower"].as<double>();
   robot->r_upper = result_wf["r_upper"].as<double>();
-  robot->memory_length = result_wf["mem"].as<int>();
+  // robot->memory_length = result_wf["mem"].as<int>();
   robot->addtl_data = result_wf["data"].as<std::string>();
 
   // parse input params from commandline
@@ -75,7 +75,7 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
 
   // set up range finder
   ModelRanger *laser = NULL;
-  for( int i=0; i<16; i++ )
+  for( int i=1; i<17; i++ )
     {
       char name[32];
       snprintf( name, 32, "ranger:%d", i ); // generate sequence of model names
@@ -127,7 +127,7 @@ int LaserUpdate(Model *, robot_t *robot)
     }
   }
 
-  memory_update(robot);
+  // memory_update(robot);
   if (robot->pos->GetPose().Distance(robot->goal_pos) < tol) {
     goal_updates(robot);
   }

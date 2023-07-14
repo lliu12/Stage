@@ -1,14 +1,8 @@
-// travel towards goal noisily, stop moving forward to avoid collisions
-// stores a memory vector of whether robot was blocked or not
+// initial attempt at implementing flocking
 
 // #include "stage.hh"
 #include "/Users/lucyliu/stg/include/Stage-4.3/stage.hh"
 #include "/Users/lucyliu/stage4/Stage/examples/ctrl/circles/controller_utils.hh"
-#include <cxxopts.hpp>
-#include <random>
-#include <chrono>
-#include <fstream>
-// #include <cstdlib> 
 
 using namespace Stg;
 
@@ -23,11 +17,19 @@ struct robot_t : base_robot{ // base_robot imported from controller_utils
   std::vector<bool> blocked_memory;
   unsigned int memory_index, memory_length, blocked_count;
   bool random_runsteps;
+  ModelFiducial *fiducial;
+  ModelFiducial::Fiducial *closest;
+  radians_t closest_bearing;
+  meters_t closest_range;
+  radians_t closest_heading_error;
+  radians_t avg_nbr_heading_error;
+  double flockstrength;
 };
 typedef struct robot_t robot_t;
 
 int LaserUpdate(Model *mod, robot_t *robot);
 int PositionUpdate(Model *mod, robot_t *robot);
+int FiducialUpdate(ModelFiducial *fid, robot_t *robot);
 int Reset(Model *mod, robot_t *robot);
 
 // Stage calls this when the model starts up
@@ -52,6 +54,7 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
     ("t, tumblesteps", "Total steps in a tumble phase", cxxopts::value<int>())
     ("mem", "Length of memory stored", cxxopts::value<int>())
     ("d, data", "Data in string form to append to any data outputs", cxxopts::value<std::string>()->default_value(""))
+    ("f, flockstrength", "flocking weight when choosing angle", cxxopts::value<double>()->default_value("0.5"))
     ;
 
   auto result_wf = cast_args(options_wf, &args->worldfile[0]);
@@ -68,6 +71,7 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
   robot->avg_runsteps = result_wf["runsteps"].as<int>();
   robot->random_runsteps = result_wf["random_runsteps"].as<bool>();
   robot->tumblesteps = result_wf["tumblesteps"].as<int>();
+  robot->flockstrength = result_wf["flockstrength"].as<double>();
   
   robot->anglenoise = result_wf["anglenoise"].as<double>();
   robot->addtl_data = result_wf["data"].as<std::string>();
@@ -97,7 +101,7 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
 
   // set up range finder
   ModelRanger *laser = NULL;
-  for( int i=0; i<16; i++ )
+  for( int i=1; i<17; i++ )
     {
       char name[32];
       snprintf( name, 32, "ranger:%d", i ); // generate sequence of model names
@@ -115,6 +119,12 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
     PRINT_ERR("  Failed to find a ranger with more than 8 samples. Exit.");
     exit(2);
   }
+
+  robot->fiducial = (ModelFiducial *)mod->GetUnusedModelOfType("fiducial");
+  assert(robot->fiducial);
+  robot->fiducial->AddCallback(Model::CB_UPDATE, (model_callback_t)FiducialUpdate, robot);
+  robot->fiducial->Subscribe();
+
   robot->laser = laser;
   robot->laser->AddCallback(Model::CB_UPDATE, model_callback_t(LaserUpdate), robot);
   robot->laser->Subscribe();
@@ -174,23 +184,55 @@ inline void memory_update(robot_t *robot) {
   }
 }
 
-// inspect the ranger data and decide what to do
-int LaserUpdate(Model *, robot_t *robot)
+int FiducialUpdate(ModelFiducial *fid, robot_t *robot)
 {
-  // get the data
-  const std::vector<meters_t> &scan = robot->laser->GetSensors()[0].ranges;
-  uint32_t sample_count = scan.size();
-  if (sample_count < 1)
-    return 0;
-
   robot->stop = false;
-
-  for (uint32_t i = 0; i < sample_count; i++) {
-    if (scan[i] < robot->stopdist) {
-      robot->stop = true;
+  // find the closest teammate
+  double dist = 1e6; // big
+  robot->closest = NULL;
+  FOR_EACH (it, fid->GetFiducials()) {
+    ModelFiducial::Fiducial *other = &(*it);
+    if (other->range < dist) {
+      dist = other->range;
+      robot->closest = other;
     }
   }
 
+  if (robot->closest) // if we saw someone
+  {
+    robot->closest_bearing = robot->closest->bearing;
+    robot->closest_range = robot->closest->range;
+    robot->closest_heading_error = robot->closest->geom.a;
+  }
+
+  robot->stop = (dist < robot->stopdist);
+
+  return 0;
+}
+
+
+// inspect the ranger data and decide what to do
+int LaserUpdate(Model *, robot_t *robot)
+{
+  // // get the data
+  // const std::vector<meters_t> &scan = robot->laser->GetSensors()[0].ranges;
+  // uint32_t sample_count = scan.size();
+  // if (sample_count < 1)
+  //   return 0;
+
+  // robot->stop = false;
+
+  // for (uint32_t i = 0; i < sample_count; i++) {
+  //   if (scan[i] < robot->stopdist) {
+  //     robot->stop = true;
+  //   }
+  // }
+ 
+  return 0; // run again
+}
+
+int PositionUpdate(Model *, robot_t *robot)
+{
   double s = 2 * robot->r_upper;
   Pose cur_pos = robot->pos->GetPose();
 
@@ -207,14 +249,11 @@ int LaserUpdate(Model *, robot_t *robot)
     goal_updates(robot);
   }
 
-
-
   // check if current run or tumble phase is over
   if (robot->current_phase_count >= (robot->running ? robot->runsteps : robot->tumblesteps)) {
     robot->running = !robot->running;
     robot->current_phase_count = 0;
   }
-
 
   if (robot->current_phase_count == 0) {
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -259,7 +298,17 @@ int LaserUpdate(Model *, robot_t *robot)
 
       float frustration = (robot->memory_length == 0 ? 1 : float(robot->blocked_count) / float(robot->memory_length));
       std::normal_distribution<double> distribution(robot->anglebias * frustration, robot->anglenoise * frustration);
-      robot->goal_angle = normalize(goal_angle += distribution(generator));
+
+      // average between (possibly noisy) goal angle and closest neighbor's from fiducials, if closest neighbor is found
+      if (robot->closest) {
+        // use pose.a or geom.a. pose.a is perfectly accurate but is kind of cheating; geom.a is the relative angle difference
+        Stg::radians_t avg_angle = normalize(.5 * (robot->closest->geom.a + 2 * robot->pos->GetPose().a));
+        robot->goal_angle = normalize((1 - robot->flockstrength) * (goal_angle + distribution(generator)) + robot->flockstrength * avg_angle);
+        // printf("%s goal angle: %f \n", robot->pos->Token(), robot->goal_angle);
+      }
+      else {
+        robot->goal_angle = normalize(goal_angle + distribution(generator));
+      }
     }
   }
   
@@ -283,11 +332,5 @@ int LaserUpdate(Model *, robot_t *robot)
   }
 
   robot->current_phase_count++;
-  return 0; // run again
-}
-
-int PositionUpdate(Model *, robot_t *robot)
-{
-  Pose pose = robot->pos->GetPose();
   return 0; // run again
 }

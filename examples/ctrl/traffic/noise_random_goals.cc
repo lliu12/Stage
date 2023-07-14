@@ -99,7 +99,7 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
 
   // set up range finder
   ModelRanger *laser = NULL;
-  for( int i=0; i<16; i++ )
+  for( int i=1; i<17; i++ )
     {
       char name[32];
       snprintf( name, 32, "ranger:%d", i ); // generate sequence of model names

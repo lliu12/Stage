@@ -24,7 +24,6 @@ struct robot_t : base_robot{ // base_robot imported from controller_utils
   int frustration_len; // how many frustrated steps to take after being blocked
   int frustrated_samples_left; // how many frustrated steps left (decreases with each non-blocked sample)
   bool random_runsteps;
-  ModelFiducial *fiducial;
 };
 typedef struct robot_t robot_t;
 
@@ -159,6 +158,7 @@ int Reset(Model *, robot_t *robot) {
 
 int FiducialUpdate(ModelFiducial *fid, robot_t *robot)
 {
+  robot->stop = false;
   // find the closest teammate
   double dist = 1e6; // big
   robot->closest = NULL;
