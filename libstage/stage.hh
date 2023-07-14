@@ -2988,6 +2988,8 @@ class DataCollector {
   int CountNumRobots(World *world);
   int CountBlockedRobots(World *world);
   void SimWorldCountBlocked(World *world, int trials);
+  void SimWorldRecordStoppedRobots(World *world, int trials, bool save_positions);
+  void SimWorldRecordStoppedRobotsClosest(World *world, int trials, bool save_positions);
   std::string GetAddtlData(World *world);
 };
 
