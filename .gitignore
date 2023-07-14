@@ -6,7 +6,13 @@ config.h
 .DS_Store
 docsrc/stage
 *.txt.user
+<<<<<<< HEAD
 
+=======
+*.o
+*.la
+*.libs
+>>>>>>> traffic/master
 
 # Compiled Object files
 *.slo
