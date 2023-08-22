@@ -3,9 +3,8 @@
 // Otherwise move in optimal direction (or with baseline noise)
 // Uses fiducial instead of model ranger to access ID of who robots see
 
-// #include "stage.hh"
-#include "/Users/lucyliu/stg/include/Stage-4.3/stage.hh"
-#include "/Users/lucyliu/stage4/Stage/examples/ctrl/circles/controller_utils.hh"
+#include "../../../libstage/stage.hh"
+#include "controller_utils.hh"
 #include <cxxopts.hpp>
 #include <random>
 #include <chrono>

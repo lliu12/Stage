@@ -1,4 +1,4 @@
-#include "/Users/lucyliu/stg/include/Stage-4.3/stage.hh"
+#include "../../../libstage/stage.hh"
 #include <fstream>
 using namespace Stg;
 

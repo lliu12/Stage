@@ -1,8 +1,7 @@
 // robot travels straight ahead and begins traveling in a circle when it sees an obstruction
 // compute when to exit circle using closest point on circle to goal
 
-// #include "stage.hh"
-#include "/Users/lucyliu/stg/include/Stage-4.3/stage.hh"
+#include "../../../libstage/stage.hh"
 using namespace Stg;
 
 static const double cruisespeed = 0.4;

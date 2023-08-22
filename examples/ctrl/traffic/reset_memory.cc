@@ -2,9 +2,8 @@
 // If it's been X or less samples since you were last blocked, move in a totally random direction
 // Otherwise move in optimal direction (or with baseline noise)
 
-// #include "stage.hh"
-#include "/Users/lucyliu/stg/include/Stage-4.3/stage.hh"
-#include "/Users/lucyliu/stage4/Stage/examples/ctrl/circles/controller_utils.hh"
+#include "../../../libstage/stage.hh"
+#include "controller_utils.hh"
 #include <cxxopts.hpp>
 #include <random>
 #include <chrono>

@@ -1,8 +1,7 @@
 // robot travels straight ahead
 
-// #include "stage.hh"
-#include "/Users/lucyliu/stg/include/Stage-4.3/stage.hh"
-#include "/Users/lucyliu/stage4/Stage/examples/ctrl/circles/controller_utils.hh"
+#include "../../../libstage/stage.hh"
+#include "controller_utils.hh"
 #include <cxxopts.hpp>
 using namespace Stg;
 

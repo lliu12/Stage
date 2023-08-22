@@ -1,8 +1,7 @@
 // travel towards goal, but turn right as far as necessary to not run into anything
 // generate start and goal locations using rejection sampling for points at the outer part of the circle
 
-// #include "stage.hh"
-#include "/Users/lucyliu/stg/include/Stage-4.3/stage.hh";
+#include "../../../libstage/stage.hh"
 #include <cxxopts.hpp>;
 using namespace Stg;
 

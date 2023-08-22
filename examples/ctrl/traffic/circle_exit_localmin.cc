@@ -2,8 +2,7 @@
 // robot exits circle and resumes straight-ahead travel to goal when it detecs that the goal is getting farther, not closer anymore
 // but this will be problematic when a robot is taking a traffic circle "the wrong way"
 
-// #include "stage.hh"
-#include "/Users/lucyliu/stg/include/Stage-4.3/stage.hh"
+#include "../../../libstage/stage.hh"
 using namespace Stg;
 
 static const double cruisespeed = 1;

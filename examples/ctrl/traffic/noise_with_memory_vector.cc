@@ -1,9 +1,8 @@
 // travel towards goal noisily, stop moving forward to avoid collisions
 // stores a memory vector of whether robot was blocked or not
 
-// #include "stage.hh"
-#include "/Users/lucyliu/stg/include/Stage-4.3/stage.hh"
-#include "/Users/lucyliu/stage4/Stage/examples/ctrl/circles/controller_utils.hh"
+#include "../../../libstage/stage.hh"
+#include "controller_utils.hh"
 #include <cxxopts.hpp>
 #include <random>
 #include <chrono>

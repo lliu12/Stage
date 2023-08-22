@@ -1,5 +1,5 @@
-#include "/Users/lucyliu/stg/include/Stage-4.3/stage.hh"
-#include "/Users/lucyliu/stage4/Stage/examples/ctrl/circles/base_robot.hh"
+#include "../../../libstage/stage.hh"
+#include "base_robot.hh"
 #include <cxxopts.hpp>
 #include <random>
 #include <chrono>

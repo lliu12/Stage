@@ -1,8 +1,7 @@
 // travel towards goal, but turn right as far as necessary to not run into anything
 // goal positions randomized on circle edge
 
-// #include "stage.hh"
-#include "/Users/lucyliu/stg/include/Stage-4.3/stage.hh"
+#include "../../../libstage/stage.hh"
 using namespace Stg;
 
 static const double cruisespeed = 1;

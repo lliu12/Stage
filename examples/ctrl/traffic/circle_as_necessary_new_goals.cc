@@ -2,8 +2,7 @@
 // generate start and goal locations using rejection sampling for points at the outer part of the circle
 // generate a new goal every time instead of simply going back and forth
 
-// #include "stage.hh"
-#include "/Users/lucyliu/stg/include/Stage-4.3/stage.hh"
+#include "../../../libstage/stage.hh"
 using namespace Stg;
 
 

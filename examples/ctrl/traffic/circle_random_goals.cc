@@ -2,9 +2,8 @@
 // generate goal locations using rejection sampling for points at the outer part of the circle
 // takes arguments from when controller is called in world file 
 
-// #include "stage.hh"
-#include "/Users/lucyliu/stg/include/Stage-4.3/stage.hh"
-#include "/Users/lucyliu/stage4/Stage/examples/ctrl/circles/controller_utils.hh"
+#include "../../../libstage/stage.hh"
+#include "controller_utils.hh"
 #include <cxxopts.hpp>
 #include <fstream>
 #include <chrono>

@@ -1,9 +1,8 @@
 // Not a great name - same as the other noise controller, but instead of storing a memory vector,
 // In this one, frustration at each step is updated according to a rule that depends on only that step
 
-// #include "stage.hh"
-#include "/Users/lucyliu/stg/include/Stage-4.3/stage.hh"
-#include "/Users/lucyliu/stage4/Stage/examples/ctrl/circles/controller_utils.hh"
+#include "../../../libstage/stage.hh"
+#include "controller_utils.hh"
 #include <cxxopts.hpp>
 #include <random>
 #include <chrono>
