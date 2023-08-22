@@ -8,7 +8,7 @@
 #include <iomanip>
 
 #include "stage.hh"
-#include "/Users/lucyliu/stage4/Stage/examples/ctrl/circles/base_robot.hh"
+#include "../examples/ctrl/traffic/base_robot.hh"
 using namespace Stg;
 
 // Constructor
