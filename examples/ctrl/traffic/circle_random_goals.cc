@@ -71,6 +71,7 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
   robot->pos = dynamic_cast<ModelPosition *>(mod);
   robot->pos->SetColor(Color::RandomColor());
   robot->goals_reached = 0;
+  robot->goal_birth_time = robot->pos->GetWorld()->SimTimeNow();
 
   // set up range finder
   ModelRanger *laser = NULL;

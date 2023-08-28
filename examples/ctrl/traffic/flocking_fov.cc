@@ -92,6 +92,7 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
   robot->pos = dynamic_cast<ModelPosition *>(mod);
   robot->pos->SetColor(Color::RandomColor());
   robot->goals_reached = 0;
+  robot->goal_birth_time = robot->pos->GetWorld()->SimTimeNow();
   robot->running = false;
   robot->current_phase_count = 0;
   double s = 2 * robot->r_upper;
@@ -147,6 +148,7 @@ int Reset(Model *, robot_t *robot) {
   // printf("reset function in controller called \n");
   // printf("pos b4 reset: [ %.4f %.4f %.4f ]\n", robot->pos->GetPose().x, robot->pos->GetPose().y, robot->pos->GetPose().a);
   robot->goals_reached = 0;
+  robot->goal_birth_time = robot->pos->GetWorld()->SimTimeNow();
   robot->running = false;
   robot->current_phase_count = 0;
   robot->near_boundary = calc_near_boundary(robot);

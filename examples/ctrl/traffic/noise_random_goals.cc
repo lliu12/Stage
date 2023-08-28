@@ -7,6 +7,7 @@
 #include <random>
 #include <chrono>
 #include <fstream>
+#include "random.hh"
 
 using namespace Stg;
 
@@ -49,6 +50,9 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
     ("t, tumblesteps", "Total steps in a tumble phase", cxxopts::value<int>())
     // ("mem", "Length of memory stored", cxxopts::value<int>())
     ("d, data", "Data in string form to append to any data outputs", cxxopts::value<std::string>()->default_value(""))
+    ;
+
+  options_wf.add_options()
     ("df_blocked", "Change in frustration if robot is blocked", cxxopts::value<double>())
     ("df_free", "Change in frustration if robot is not blocked", cxxopts::value<double>())
     ("f_threshold", "Frustration threshold above which robot should take random angles", cxxopts::value<double>())
@@ -91,6 +95,7 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
   robot->pos = dynamic_cast<ModelPosition *>(mod);
   robot->pos->SetColor(Color::RandomColor());
   robot->goals_reached = 0;
+  robot->goal_birth_time = robot->pos->GetWorld()->SimTimeNow();
   robot->running = false;
   robot->current_phase_count = 0;
   robot->frustration = 0;
@@ -134,6 +139,7 @@ int Reset(Model *, robot_t *robot) {
   // printf("reset function in controller called \n");
   // printf("pos b4 reset: [ %.4f %.4f %.4f ]\n", robot->pos->GetPose().x, robot->pos->GetPose().y, robot->pos->GetPose().a);
   robot->goals_reached = 0;
+  robot->goal_birth_time = robot->pos->GetWorld()->SimTimeNow();
   robot->running = false;
   robot->current_phase_count = 0;
   robot->near_boundary = calc_near_boundary(robot);
@@ -193,15 +199,11 @@ int LaserUpdate(Model *, robot_t *robot)
 
 
   if (robot->current_phase_count == 0) {
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-    std::default_random_engine generator(seed);
-
     // if a new run phase is beginning, get random runlength between 1/2 and 3/2 of provided runsteps
     if (robot->random_runsteps && robot->running) {
       int lower = std::round(robot->avg_runsteps / 2);
       int higher = std::round(3 * robot->avg_runsteps / 2);
-      std::uniform_int_distribution<uint32_t> unifrange(lower,higher);
-      robot->runsteps = unifrange(generator);
+      robot->runsteps = Random::get_unif_int(lower, higher);
     }
 
     // if a new tumble phase is beginning, set goal angle
@@ -239,8 +241,7 @@ int LaserUpdate(Model *, robot_t *robot)
         robot->goal_angle =  2 * M_PI * (drand48() - .5);
       }
       else {
-        std::normal_distribution<double> distribution(0, robot->anglenoise);
-        robot->goal_angle = normalize(goal_angle += distribution(generator));
+        robot->goal_angle = normalize(goal_angle + Random::get_normal_double(0, robot->anglenoise));
       }
     }
   }

@@ -1,6 +1,7 @@
 
 #ifndef STG_H
 #define STG_H
+#define GL_SILENCE_DEPRECATION
 /*
  *  Stage : a multi-robot simulator. Part of the Player Project.
  *

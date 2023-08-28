@@ -8,10 +8,10 @@ struct base_robot {
   ModelRanger *laser;
   ModelFiducial *fiducial;
   int goals_reached;
+  uint64_t goal_birth_time;
   Pose start_pos, goal_pos;
   bool stop;
   double stopdist, cruisespeed, r_lower, r_upper;
-  // bool newgoals; // if yes, keep generating new goals for robot. else, move b&f between initial start and goal
   std::string outfile_name, addtl_data = ""; 
   std::ofstream outfile;
   bool verbose, newgoals, periodic, circle;

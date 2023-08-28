@@ -104,6 +104,7 @@ inline void goal_updates(base_robot *robot) {
     wps.push_back(ModelPosition::Waypoint(robot->goal_pos, robot->pos->GetColor()));
     robot->pos->waypoints = wps;
     robot->goals_reached++;
+    robot->goal_birth_time = robot->pos->GetWorld()->SimTimeNow();
 }
 
 // Return true if robot position is within stopdist of boundary 

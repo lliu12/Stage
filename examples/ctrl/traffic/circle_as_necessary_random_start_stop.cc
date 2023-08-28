@@ -2,7 +2,7 @@
 // generate start and goal locations using rejection sampling for points at the outer part of the circle
 
 #include "../../../libstage/stage.hh"
-#include <cxxopts.hpp>;
+#include <cxxopts.hpp>
 using namespace Stg;
 
 static const double stopdist = 0.5;
