@@ -3,7 +3,7 @@
 #include <chrono>
 #include <fstream>
 #include "random.hh"
-#include "base_robot.hh"
+#include "traffic_robots.hh"
 
 
 using namespace Stg;
@@ -21,6 +21,7 @@ int Reset(Model *mod, BaseRobot *robot);
 extern "C" int Init(Model *mod, CtrlArgs *args)
 {
   NoiseRobot *robot = new NoiseRobot(mod, args);
+  
   robot->initialize(mod, args);
 
   assert(robot->fiducial);
@@ -54,7 +55,7 @@ int LaserUpdate(Model *, BaseRobot *robot)
 
 int PositionUpdate(Model *, BaseRobot *robot)
 {
-  robot->location_sensor_update();
+  robot->member_update();
 
   // check if robot has reached its goal and update variables accordingly
   if (robot->pos->GetPose().Distance(robot->goal_pos) < tol) {
@@ -63,5 +64,5 @@ int PositionUpdate(Model *, BaseRobot *robot)
 
   robot->motion_update();
 
-    return 0;
+  return 0;
 }

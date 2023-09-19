@@ -20,11 +20,11 @@ int Reset(Model *mod, BaseRobot *robot);
 // Stage calls this when the model starts up
 extern "C" int Init(Model *mod, CtrlArgs *args)
 {
-  BaseRobot *robot = new BaseRobot(mod, args);
+  WithinLastFRobot *robot = new WithinLastFRobot(mod, args);
   robot->initialize(mod, args);
 
   assert(robot->fiducial);
-  robot->fiducial->AddCallback(Model::CB_UPDATE, (model_callback_t)FiducialUpdate, robot);
+  robot->fiducial->AddCallback(Model::CB_UPDATE, model_callback_t(FiducialUpdate), robot);
   robot->fiducial->Subscribe();
 
   robot->laser->AddCallback(Model::CB_UPDATE, model_callback_t(LaserUpdate), robot);
@@ -33,7 +33,7 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
   robot->pos->AddCallback(Model::CB_UPDATE, model_callback_t(PositionUpdate), robot);
   robot->pos->AddCallback(Model::CB_RESET, model_callback_t(Reset), robot);
   robot->pos->Subscribe(); // starts the position updates
-  
+
   return 0; // ok
 }
 
