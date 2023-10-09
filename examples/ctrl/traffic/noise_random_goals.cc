@@ -2,6 +2,7 @@
 // In this one, frustration at each step is updated according to a rule that depends on only that step
 
 #include "../../../libstage/stage.hh"
+#include "base_robot.hh"
 #include "controller_utils.hh"
 #include <cxxopts.hpp>
 #include <random>
@@ -48,11 +49,11 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
     ("r, runsteps", "Total steps in a run phase", cxxopts::value<int>())
     ("random_runsteps", "Randomize runsteps each phase (average is the runsteps passed above)", cxxopts::value<bool>()) // implicit value is true
     ("t, tumblesteps", "Total steps in a tumble phase", cxxopts::value<int>())
-    // ("mem", "Length of memory stored", cxxopts::value<int>())
     ("d, data", "Data in string form to append to any data outputs", cxxopts::value<std::string>()->default_value(""))
     ;
 
   options_wf.add_options()
+    // ("mem", "Length of memory stored", cxxopts::value<int>())
     ("df_blocked", "Change in frustration if robot is blocked", cxxopts::value<double>())
     ("df_free", "Change in frustration if robot is not blocked", cxxopts::value<double>())
     ("f_threshold", "Frustration threshold above which robot should take random angles", cxxopts::value<double>())
@@ -238,7 +239,7 @@ int LaserUpdate(Model *, robot_t *robot)
 
       // no angle bias in current implementation!
       if (robot->frustration > robot->f_threshold) {
-        robot->goal_angle =  2 * M_PI * (drand48() - .5);
+        robot->goal_angle =  2 * M_PI * (Random::get_unif_double(0, 1) - .5);
       }
       else {
         robot->goal_angle = normalize(goal_angle + Random::get_normal_double(0, robot->anglenoise));

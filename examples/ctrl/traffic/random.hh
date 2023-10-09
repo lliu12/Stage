@@ -33,15 +33,20 @@ namespace Random
 	// Generate a random int between [min, max] (inclusive)
 	inline int get_unif_int(int min, int max) 
 	{
-		// return std::uniform_int_distribution<int>{min, max}(mt);
 		std::uniform_int_distribution<int> distribution(min, max);
+		return distribution(mt);
+	}
+
+	// Generate a random int between [min, max] (inclusive)
+	inline double get_unif_double(double min, double max) 
+	{
+		std::uniform_real_distribution<double> distribution(min, max);
 		return distribution(mt);
 	}
 
 	// Generate a normal-distributed double with prescribed mean and stdev
 	inline double get_normal_double(double mean, double stdev) 
 	{
-		// std::normal_distribution<double>{mean, stdev} (mt);
 		std::normal_distribution<double> distribution(mean, stdev);
         return distribution(mt);
 	}

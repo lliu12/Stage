@@ -662,6 +662,8 @@ bool Model::RandomPoseInFreeSpace(meters_t xmin, meters_t xmax,
   return i <= max_iter; // return true if a free pose was found within max iterations
 }
 
+// After running this, models will no longer be colliding (unless max_iter is reached)
+// But sometimes they are still not spaced far enough apart to account for rotational noise
 bool Model::AdjustPoseToFreeSpace(meters_t rad, size_t max_iter)
 {
   size_t i = 0;

@@ -9,12 +9,12 @@ CXXLD = gcc
 LIBTOOL = glibtool
 STAGE_CFLAGS = `pkg-config --cflags stage`
 
-SRCS := $(wildcard *robot.cc)
+SRCS := $(wildcard *robot*.cc)
 BINS := $(SRCS:%.cc=%.la)
 
 all: ${BINS}
 
-%.la: %.lo base_robot.lo
+%.la: %.lo traffic_robots.lo
 #	$(LIBTOOL) --tag CXX --mode=link $(CXXLD) -std=c++17 -rpath /Users/lucyliu/stg/lib/Stage-4.3 -module -export-dynamic $^ -o $@ -dynamiclib
 	$(LIBTOOL) --tag CXX --mode=link $(CXXLD) -std=c++17 -rpath /Users/lucyliu/stg/lib/Stage-4.3 -g -O -o $@ $^ -module -export-dynamic
 
@@ -22,6 +22,5 @@ all: ${BINS}
 	$(LIBTOOL) --tag CXX --mode=compile $(CXX) -std=c++17 -g -O -c $<
 
 clean:
-	rm -rf *.o *.lo *.la
-#	rm -rf *.o *.lo *.la .libs  
+	rm -rf *.o *.lo *.la .libs 
 

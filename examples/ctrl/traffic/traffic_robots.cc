@@ -136,7 +136,6 @@ void BaseRobot::gen_start_goal_positions() {
   }
   pos->SetGlobalPose(random_goal());
   start_pos = pos->GetPose();
-  pos->AdjustPoseToFreeSpace(stopdist, 10);
   goal_pos = random_goal(); // set goal
 }
 
@@ -368,7 +367,7 @@ double WithinLastFRobot::get_travel_angle() {
 }
 
 void WithinLastFRobot::member_update() {
-  BaseRobot::member_update();
+  NoiseRobot::member_update();
   if (pos->GetWorld()->SimTimeNow() % memory_interval == 0) {
     if (stop) {
         frustrated_samples_left = frustration_len;

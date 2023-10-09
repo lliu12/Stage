@@ -9,6 +9,7 @@
 #include <random>
 #include <chrono>
 #include <fstream>
+#include "random.hh"
 
 using namespace Stg;
 
@@ -54,7 +55,7 @@ extern "C" int Init(Model *mod, CtrlArgs *args)
     ("d, data", "Data in string form to append to any data outputs", cxxopts::value<std::string>()->default_value(""))
     ;
 
-  auto result_wf = cast_args(options_wf, &args->worldfile[0]);
+  cxxopts::ParseResult result_wf = cast_args(options_wf, &args->worldfile[0]);
   robot->stopdist = result_wf["stopdist"].as<double>();
   robot->cruisespeed = result_wf["cruisespeed"].as<double>();
   robot->newgoals = result_wf["newgoals"].as<bool>();
@@ -234,15 +235,11 @@ int PositionUpdate(Model *, robot_t *robot)
 
 
   if (robot->current_phase_count == 0) {
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-    std::default_random_engine generator(seed);
-
     // if a new run phase is beginning, get random runlength between 1/2 and 3/2 of provided runsteps
     if (robot->random_runsteps && robot->running) {
       int lower = std::round(robot->avg_runsteps / 2);
       int higher = std::round(3 * robot->avg_runsteps / 2);
-      std::uniform_int_distribution<uint32_t> unifrange(lower,higher);
-      robot->runsteps = unifrange(generator);
+      robot->runsteps = Random::get_unif_int(lower, higher);
     }
 
     // if a new tumble phase is beginning, set goal angle
@@ -277,11 +274,10 @@ int PositionUpdate(Model *, robot_t *robot)
 
       // if robot frustrated, take uniformly random direction. otherwise add anglenoise to optimal goal angle
       if (robot->frustrated_samples_left > 0) {
-        robot->goal_angle =  2 * M_PI * (drand48() - .5);
+        robot->goal_angle =  2 * M_PI * (Random::get_unif_double(0, 1) - .5);
       }
       else {
-        std::normal_distribution<double> distribution(0, robot->anglenoise);
-        robot->goal_angle = normalize(goal_angle += distribution(generator));
+        robot->goal_angle = normalize(goal_angle + Random::get_normal_double(0, robot->anglenoise));
       }
     }
   }

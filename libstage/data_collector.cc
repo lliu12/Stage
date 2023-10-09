@@ -1,14 +1,10 @@
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-
 #include <cstdlib>
 #include <stdlib.h>
 #include <string.h>
 #include <iomanip>
 
 #include "stage.hh"
-#include "../examples/ctrl/traffic/base_robot.hh"
+#include "../examples/ctrl/traffic/traffic_robots.hh"
 using namespace Stg;
 
 // Constructor
@@ -41,7 +37,7 @@ int DataCollector::CountBlockedRobots(World *world) {
         std::set<Model::cb_t> &reset_callbacks = (*m)->callbacks[Model::CB_RESET];
         FOR_EACH (it, reset_callbacks) {
             const Model::cb_t &cba = *it;
-            if (((struct base_robot*)cba.arg)->stop) {
+            if (((BaseRobot*)cba.arg)->stop) {
                 result++;
             }
         }
@@ -56,7 +52,7 @@ std::string DataCollector::GetAddtlData(World *world) {
         std::set<Model::cb_t> &reset_callbacks = (*m)->callbacks[Model::CB_RESET];
         FOR_EACH (it, reset_callbacks) {
             const Model::cb_t &cba = *it;
-            result = ((struct base_robot*)cba.arg)->addtl_data;
+            result = ((BaseRobot*)cba.arg)->addtl_data;
         }
     }
     return result;
@@ -75,7 +71,7 @@ void DataCollector::SimWorldCountBlocked(World *world, int trials) {
     std::string world_addtl_data = GetAddtlData(world);
     for (int trial = 0; trial < trials; trial++) {
         bool done = false;
-        int since_last_sample = 0; // num updaets since we last saved data
+        int since_last_sample = 0; // num updates since we last saved data
         do {
             // save data at steps_between_samples update intervals
             if (since_last_sample % steps_between_samples == 0) {
@@ -111,14 +107,17 @@ void DataCollector::SimWorldRecordStoppedRobots(World *world, int trials, bool s
                     std::set<Model::cb_t> &reset_callbacks = (*m)->callbacks[Model::CB_RESET];
                     FOR_EACH (it, reset_callbacks) {
                         const Model::cb_t &cba = *it;
-                        base_robot *robot = (struct base_robot*)cba.arg;
+                        BaseRobot *robot = (BaseRobot*)cba.arg;
                         if (!robot->stop) {
                             *outfile << std::to_string(trial) + std::string(",") +
                                 std::to_string(world->SimTimeNow()) + std::string(",") +
                                 world_addtl_data + 
                                 std::to_string((*m)->GetFiducialReturn()) + std::string(",")
                                 << robot->pos->GetPose().x << std::string(",")
-                                << robot->pos->GetPose().y << std::string(",") +
+                                << robot->pos->GetPose().y << std::string(",")
+                                << robot->pos->GetPose().a << std::string(",") +
+                                std::to_string(robot->goal_birth_time) + std::string(",") +
+                                std::to_string(robot->goals_reached) + std::string(",") +
                                 std::to_string(robot->stop) + std::string(",") +
                                 std::to_string(-1) + std::string(",")
                                 << std::endl;
@@ -133,7 +132,10 @@ void DataCollector::SimWorldRecordStoppedRobots(World *world, int trials, bool s
                                         world_addtl_data + 
                                         std::to_string((*m)->GetFiducialReturn()) + std::string(",")
                                         << robot->pos->GetPose().x << std::string(",")
-                                        << robot->pos->GetPose().y << std::string(",") +
+                                        << robot->pos->GetPose().y << std::string(",")
+                                        << robot->pos->GetPose().a << std::string(",") +
+                                        std::to_string(robot->goal_birth_time) + std::string(",") +
+                                        std::to_string(robot->goals_reached) + std::string(",") +
                                         std::to_string(robot->stop) + std::string(",") +
                                         std::to_string(other->id) + std::string(",")
                                         << std::endl;
@@ -166,7 +168,7 @@ void DataCollector::SimWorldRecordStoppedRobotsClosest(World *world, int trials,
                     std::set<Model::cb_t> &reset_callbacks = (*m)->callbacks[Model::CB_RESET];
                     FOR_EACH (it, reset_callbacks) {
                         const Model::cb_t &cba = *it;
-                        base_robot *robot = (struct base_robot*)cba.arg;
+                        BaseRobot *robot = (BaseRobot*)cba.arg;
                         *outfile << std::to_string(trial) + std::string(",") +
                                     std::to_string(world->SimTimeNow()) + std::string(",") +
                                     world_addtl_data + 

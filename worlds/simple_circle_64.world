@@ -1,0 +1,152 @@
+# simple_circle_64.world simple circle with 64 robots
+# Authors: Richard Vaughan
+# $Id$
+
+include "traffic_pioneer.inc"
+include "map.inc"
+include "sick.inc"
+
+# time to pause (in GUI mode) or quit (in headless mode (-g)) the simulation
+quit_time 3600 # 1 hour of simulated time
+
+paused 1
+periodic 0
+periodic_bounds 8
+
+# spatial resolution of the underlying occupancy grid. Default is 0.02m.
+resolution .04
+
+# set the multiple of real time that Stage should try to achieve. Default is 1. 
+# set to 0 to go as fast as possible.
+speedup 7.000
+
+# configure the GUI window
+window
+(
+  size [ 635 666 ] # in pixels
+  scale 36.995   # pixels per meter
+  center [ 0.095  -0.680 ]
+  rotate [ 0.000  0.000 ]
+  			
+  show_data 0              # 1=on 0=off
+)
+
+# load an environment bitmap
+floorplan
+( 
+  name "rink"
+  size [24.000 24.000 0.800]
+  pose [0.000 0.000 0.000 0.000]
+  bitmap "bitmaps/empty.png"
+)
+
+
+define agent pioneer2dx
+(		 
+
+#  ctrl "circle_random_goals.0 -s .5 -m 1 -a .1 -c .3 -t -1 -l 0 -u 8 -n true"
+
+#  ctrl "noise_with_memory_vector.0 -s .7 -c .3 -l 0 -u 8 -a 1 -b 0 -r 40 -t 40 -n true --mem 0 --circle"
+
+# ctrl "noise_random_goals.0 -s .5 -c .3 -l 0 -u 8 -a 1 -b 0 -r 40 -t 40 -n true --df_blocked 1 --df_free -.9 --f_threshold 20 --random_runsteps --circle"
+
+# ctrl "noise_random_goals.0 -s .5 -c .3 -l 0 -u 8 -a .5 -b 0 -r 40 -t 40 -n true --df_blocked 0 --df_free 0 --f_threshold 20 --circle"
+
+ ctrl "reset_memory_fid.0 -s .7 -c .3 -l 0 -u 8 -a 1.0 -b 0 -r 40 -t 40 -f 0 -d 0.0,32,0, --random_runsteps --circle -n true"
+
+# ctrl "flocking_fov.0 -s .8 -c .3 -l 0 -u 8 -a 0 -b 0 -r 0 -t 0 -n true --mem 10 --circle -f .5"
+
+  sicklaser( pose [ 0.000 0.000 0.000 0.000 ] ) 
+
+  # report error-free position in world coordinates
+  localization "gps"
+  localization_origin [ 0 0 0 0 ]
+
+ # fiducial
+  fiducial_return 1
+  # fiducial( range_max_id 4 range_max 4 fov 360 pose [ 0 0 -0.050 0 ] )
+  fiducial( range_max_id 1 range_max 1 fov 150 pose [ 0 0 0 0 ] )
+
+ # small speed optimization
+ # trail_length 0
+)
+
+agent( pose [5.0 0.0 0 180.0 ] )
+agent( pose [3.55 3.55 0 225.0 ] )
+agent( pose [0.0 5.0 0 270.0 ] )
+agent( pose [-3.55 3.55 0 315.0 ] )
+agent( pose [-5.0 0.0 0 0.0 ] )
+agent( pose [-3.55 -3.55 0 45.0 ] )
+agent( pose [-0.0 -5.0 0 90.0 ] )
+agent( pose [3.55 -3.55 0 135.0 ] )
+
+agent( pose [5.0 0.0 0 180.0 ] )
+agent( pose [3.55 3.55 0 225.0 ] )
+agent( pose [0.0 5.0 0 270.0 ] )
+agent( pose [-3.55 3.55 0 315.0 ] )
+agent( pose [-5.0 0.0 0 0.0 ] )
+agent( pose [-3.55 -3.55 0 45.0 ] )
+agent( pose [-0.0 -5.0 0 90.0 ] )
+agent( pose [3.55 -3.55 0 135.0 ] )
+
+
+agent( pose [5.0 0.0 0 180.0 ] )
+agent( pose [3.55 3.55 0 225.0 ] )
+agent( pose [0.0 5.0 0 270.0 ] )
+agent( pose [-3.55 3.55 0 315.0 ] )
+agent( pose [-5.0 0.0 0 0.0 ] )
+agent( pose [-3.55 -3.55 0 45.0 ] )
+agent( pose [-0.0 -5.0 0 90.0 ] )
+agent( pose [3.55 -3.55 0 135.0 ] )
+
+agent( pose [5.0 0.0 0 180.0 ] )
+agent( pose [3.55 3.55 0 225.0 ] )
+agent( pose [0.0 5.0 0 270.0 ] )
+agent( pose [-3.55 3.55 0 315.0 ] )
+agent( pose [-5.0 0.0 0 0.0 ] )
+agent( pose [-3.55 -3.55 0 45.0 ] )
+agent( pose [-0.0 -5.0 0 90.0 ] )
+agent( pose [3.55 -3.55 0 135.0 ] )
+
+
+
+agent( pose [5.0 0.0 0 180.0 ] )
+agent( pose [3.55 3.55 0 225.0 ] )
+agent( pose [0.0 5.0 0 270.0 ] )
+agent( pose [-3.55 3.55 0 315.0 ] )
+agent( pose [-5.0 0.0 0 0.0 ] )
+agent( pose [-3.55 -3.55 0 45.0 ] )
+agent( pose [-0.0 -5.0 0 90.0 ] )
+agent( pose [3.55 -3.55 0 135.0 ] )
+
+agent( pose [5.0 0.0 0 180.0 ] )
+agent( pose [3.55 3.55 0 225.0 ] )
+agent( pose [0.0 5.0 0 270.0 ] )
+agent( pose [-3.55 3.55 0 315.0 ] )
+agent( pose [-5.0 0.0 0 0.0 ] )
+agent( pose [-3.55 -3.55 0 45.0 ] )
+agent( pose [-0.0 -5.0 0 90.0 ] )
+agent( pose [3.55 -3.55 0 135.0 ] )
+
+agent( pose [5.0 0.0 0 180.0 ] )
+agent( pose [3.55 3.55 0 225.0 ] )
+agent( pose [0.0 5.0 0 270.0 ] )
+agent( pose [-3.55 3.55 0 315.0 ] )
+agent( pose [-5.0 0.0 0 0.0 ] )
+agent( pose [-3.55 -3.55 0 45.0 ] )
+agent( pose [-0.0 -5.0 0 90.0 ] )
+agent( pose [3.55 -3.55 0 135.0 ] )
+
+agent( pose [5.0 0.0 0 180.0 ] )
+agent( pose [3.55 3.55 0 225.0 ] )
+agent( pose [0.0 5.0 0 270.0 ] )
+agent( pose [-3.55 3.55 0 315.0 ] )
+agent( pose [-5.0 0.0 0 0.0 ] )
+agent( pose [-3.55 -3.55 0 45.0 ] )
+agent( pose [-0.0 -5.0 0 90.0 ] )
+agent( pose [3.55 -3.55 0 135.0 ] )
+
+
+
+
+

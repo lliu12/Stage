@@ -137,7 +137,7 @@ World::World(const std::string &,
       models_with_fiducials_byy(), ppm(ppm), // raytrace resolution
       quit(false), show_clock(false), 
       show_clock_interval(100), // 10 simulated seconds using defaults
-      periodic(false), periodic_bounds(100),
+      periodic(false), periodic_bounds(100), model_init_mindist(0), model_init_iters(10), // world fields added by LL
       sync_mutex(), threads_working(0), threads_start_cond(), threads_done_cond(), total_subs(0),
       worker_threads(1),
 
@@ -437,6 +437,8 @@ void World::LoadWorldPostHook()
 
   this->periodic = wf->ReadInt(0, "periodic", this->periodic);
   this->periodic_bounds = wf->ReadFloat(0, "periodic_bounds", this->periodic_bounds);
+  this->model_init_mindist = wf->ReadFloat(0, "model_init_mindist", this->model_init_mindist);
+  this->model_init_iters = wf->ReadFloat(0, "model_init_iters", this->model_init_iters);
 
   // read msec instead of usec: easier for user
   this->sim_interval = 1e3 * wf->ReadFloat(0, "interval_sim", this->sim_interval / 1e3);
@@ -507,6 +509,7 @@ void World::Reset() {
   FOR_EACH (it, models)
     (*it)->CallResetCallbacks();
 
+  AdjustModelPositions();
 }
 
 // lucy: this function came with the original code and does not work
@@ -1231,11 +1234,42 @@ bool World::Event::operator<(const Event &other) const
   return (time > other.time);
 }
 
-// // added 1/3/2023
-// int World::GoalsReached()
-// {
-//   FOR_EACH (it, models) {
-//     models_with_fiducials_byx.insert(*it);
-//     models_with_fiducials_byy.insert(*it);
-//   }
-// }
+/// Perturb model positions (fiducial-models only) to space them 2 * rad apart 
+/// (so two robots' effective areas don't overlap)
+void World::AdjustModelPositions() {
+  meters_t min_dist = model_init_mindist; // default is 0
+  int max_iter = model_init_iters;
+  int n = models_with_fiducials.size();
+
+  Pose* pose_arr = new Pose[n];
+  for (int i = 0; i < n; i++) {
+    // tested: this array stores copies, editing it does not change the models' own stored poses.
+    pose_arr[i] = models_with_fiducials[i]->GetPose();
+  }
+
+  for (int t = 0; t < max_iter; t++) {
+    // printf("\n\niteration %i \n", t);
+    for (int i = 0; i < n; i++) {
+      Pose p1 = pose_arr[i];
+      // Pose* adjustment = new Pose();
+      for (int j = 0; j < n; j++) {
+        Pose p2 = pose_arr[j];
+        meters_t dist = p1.Distance(p2);
+        if (i != j && dist < min_dist) {
+          float mult = (min_dist - dist) / dist;
+          meters_t xdiff = p1.x - p2.x;
+          meters_t ydiff = p1.y - p2.y;
+          pose_arr[i] = Pose(p1.x + mult * xdiff, p1.y + mult * ydiff, 0, p1.a);
+        }
+      }
+    }
+  }
+
+  for (int i = 0; i < n; i++) {
+    models_with_fiducials[i]->SetGlobalPose(pose_arr[i]);
+  }
+
+
+
+
+}

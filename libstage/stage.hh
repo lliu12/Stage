@@ -834,7 +834,9 @@ quickly finding nearby fidcucials */
   bool show_clock; ///< iff true, print the sim time on stdout
   unsigned int show_clock_interval; ///< updates between clock outputs
   bool periodic; ///< use periodic boundary conditions
-  float periodic_bounds; ///< x and y axis value where periodic bounds are enforced
+  meters_t periodic_bounds; ///< x and y axis value where periodic bounds are enforced
+  meters_t model_init_mindist; ///< distance to perturb models away from each other when using AdjustModelPositions function
+  int model_init_iters; ///< maximum iterations when using AdjustModelPositions function
 
 
   //--- thread sync ----
@@ -1143,6 +1145,10 @@ nonexistent */
   void ShowClock(bool enable) { show_clock = enable; }
   /** Return the floor model */
   Model *GetGround() { return ground; }
+
+
+  /// Perturb model positions to space them min_dist apart
+  virtual void AdjustModelPositions();
 };
 
 class Block {
@@ -2976,8 +2982,8 @@ the goal pose */
 // Collect data about models in a world
 class DataCollector {
   protected:
-  std::ofstream *outfile;
-  int steps_between_samples;
+    std::ofstream *outfile;
+    int steps_between_samples;
 
   public:
     //// Constructor
@@ -2985,13 +2991,13 @@ class DataCollector {
     //// Destructor
     ~DataCollector();
 
-  // Get integer statistics about a given world
-  int CountNumRobots(World *world);
-  int CountBlockedRobots(World *world);
-  void SimWorldCountBlocked(World *world, int trials);
-  void SimWorldRecordStoppedRobots(World *world, int trials, bool save_positions);
-  void SimWorldRecordStoppedRobotsClosest(World *world, int trials, bool save_positions);
-  std::string GetAddtlData(World *world);
+    // Get integer statistics about a given world
+    int CountNumRobots(World *world);
+    int CountBlockedRobots(World *world);
+    void SimWorldCountBlocked(World *world, int trials);
+    void SimWorldRecordStoppedRobots(World *world, int trials, bool save_positions);
+    void SimWorldRecordStoppedRobotsClosest(World *world, int trials, bool save_positions);
+    std::string GetAddtlData(World *world);
 };
 
 } // end namespace stg

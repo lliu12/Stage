@@ -1,26 +1,31 @@
 #include "../../../libstage/stage.hh"
-#include "base_robot.hh"
+// #include "base_robot.hh"
 #include <cxxopts.hpp>
 #include <random>
 #include <chrono>
+#include <cxxopts.hpp>
 using namespace Stg;
 
 
+#ifndef CONTROLLER_UTILS_HH
+#define CONTROLLER_UTILS_HH
 
-// struct base_robot {
-//   ModelPosition *pos;
-//   ModelRanger *laser;
-//   int goals_reached;
-//   Pose start_pos, goal_pos;
-//   bool stop;
-//   double stopdist, cruisespeed, r_lower, r_upper;
-//   // bool newgoals; // if yes, keep generating new goals for robot. else, move b&f between initial start and goal
-//   std::string outfile_name, addtl_data; 
-//   std::ofstream outfile;
-//   bool verbose, newgoals, periodic, circle;
-//   uint64_t memory_interval = 1000000;
-// };
-// typedef struct base_robot base_robot;
+struct base_robot {
+  ModelPosition *pos;
+  ModelRanger *laser;
+  ModelFiducial *fiducial;
+  int goals_reached;
+  uint64_t goal_birth_time;
+  Pose start_pos, goal_pos;
+  bool stop;
+  double stopdist, cruisespeed, r_lower, r_upper;
+  std::string outfile_name, addtl_data = ""; 
+  std::ofstream outfile;
+  bool verbose, newgoals, periodic, circle;
+  uint64_t memory_interval = 1000000;
+  ModelFiducial::Fiducial *closest = NULL;
+};
+typedef struct base_robot base_robot;
 
 // Use rejection sampling to get a random point in a the ring between radius r_lower and r_upper (center at origin)
 Pose random_goal(double r_lower, double r_upper, base_robot *robot) {
@@ -56,6 +61,8 @@ cxxopts::ParseResult cast_args(cxxopts::Options options, char * string_start) {
 }
 
 // initialize robot's start and goal positions
+// inline void gen_start_goal_positions(base_robot *robot) {
+
 inline void gen_start_goal_positions(base_robot *robot) {
 
   if (robot->verbose) {
@@ -72,6 +79,7 @@ inline void gen_start_goal_positions(base_robot *robot) {
 
 // set up vectors for storing waypoint history, memory
 inline void gen_waypoint_data(base_robot *robot) {
+
   std::vector<ModelPosition::Waypoint> wps;
   wps.push_back(ModelPosition::Waypoint(robot->goal_pos, robot->pos->GetColor()));
   robot->pos->waypoints = wps;
@@ -86,7 +94,11 @@ inline void gen_waypoint_data(base_robot *robot) {
 // }
 
 // update necessary variables and output data when a robot reaches goal 
+// inline void goal_updates(base_robot *robot) {
 inline void goal_updates(base_robot *robot) {
+
+
+
     // if (robot->outfile_name != "NULL" && !robot->outfile_name.empty()) {
     //     robot->outfile.open(robot->outfile_name, std::ios_base::app);
     //     robot->outfile << (std::string("goal") + std::string(",") + std::to_string(robot->pos->GetWorld()->SimTimeNow()) + std::string(",") + std::string(robot->pos->Token()) + std::string(",") + robot->addtl_data) << std::endl;
@@ -116,3 +128,5 @@ inline bool calc_near_boundary(base_robot *robot) {
   return (abs(cur_pos.x - (-s/2)) < robot->stopdist || abs(cur_pos.x - s/2) < robot->stopdist || abs(cur_pos.y - (-s/2)) < robot->stopdist  || abs(cur_pos.y - s/2) < robot->stopdist);
 
 }
+
+#endif

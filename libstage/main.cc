@@ -101,6 +101,7 @@ int main( int argc, char* argv[] )
       const char *worldfilename = argv[optindex];
       World *world = (usegui ? new WorldGui(400, 300, worldfilename) : new World(worldfilename));
       world->Load(worldfilename);
+      world->AdjustModelPositions();
       world->ShowClock(showclock);
 
       if (!world->paused)

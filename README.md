@@ -1,5 +1,4 @@
 Modifications made to the original [Stage simulator](https://github.com/rtv/Stage)
-
 ----------
 
 # The Stage Simulator
