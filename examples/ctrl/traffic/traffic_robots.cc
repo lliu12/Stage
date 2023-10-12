@@ -363,8 +363,17 @@ void WithinLastFRobot::reset() {
 
 //// Determine angle for robot to steer in (after adding conditional noise)
 double WithinLastFRobot::get_travel_angle() {
-  if (anglenoise == -1) {return Random::get_unif_double(-M_PI, M_PI);}
-  else {return angle_to_goal() + (frustrated_samples_left > 0 || frustration_len == 0 ? Random::get_normal_double(anglebias, anglenoise) : 0);}
+  if (frustrated_samples_left > 0 || frustration_len == 0) {
+    double random_noise = anglenoise == -1 ? Random::get_unif_double(-M_PI, M_PI) : Random::get_normal_double(anglebias, anglenoise);
+    return angle_to_goal() + random_noise;
+  }
+  else {
+    return angle_to_goal();
+  }
+
+  //// code below does the same thing but is a little less efficient/comprehensible
+  // double random_noise = anglenoise == -1 ? Random::get_unif_double(-M_PI, M_PI) : Random::get_normal_double(anglebias, anglenoise);
+  // return angle_to_goal() + (frustrated_samples_left > 0 || frustration_len == 0 ? random_noise : 0);
 }
 
 void WithinLastFRobot::member_update() {

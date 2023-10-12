@@ -7,14 +7,16 @@ include "map.inc"
 include "sick.inc"
 
 # time to pause (in GUI mode) or quit (in headless mode (-g)) the simulation
-quit_time 3600 # 1 hour of simulated time
+quit_time 600 # 600 is 1 hour of simulated time
 
 paused 1
 periodic 0
 periodic_bounds 8
+model_init_mindist 0.65
+model_init_iters 20
 
 # spatial resolution of the underlying occupancy grid. Default is 0.02m.
-resolution .04
+resolution .02
 
 # set the multiple of real time that Stage should try to achieve. Default is 1. 
 # set to 0 to go as fast as possible.
