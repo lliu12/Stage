@@ -1269,6 +1269,11 @@ void World::AdjustModelPositions() {
     models_with_fiducials[i]->SetGlobalPose(pose_arr[i]);
   }
 
+  // for (int i = 0; i < n; i++) {
+  //   if (models_with_fiducials[i]->TestCollision()) {
+  //     printf("%s in collision", models_with_fiducials[i]->GetToken());
+  //   }
+  // }
 
 
 

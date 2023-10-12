@@ -293,7 +293,7 @@ void NoiseRobot::reset() {
 
 //// Determine angle for robot to steer in (after adding noise)
 double NoiseRobot::get_travel_angle() {
-  return angle_to_goal() + Random::get_normal_double(anglebias, anglenoise);
+  return angle_to_goal() + (anglenoise == -1 ? Random::get_unif_double(-M_PI, M_PI) : Random::get_normal_double(anglebias, anglenoise));
 }
 
 //// Set robot speed and turning angle
@@ -363,7 +363,8 @@ void WithinLastFRobot::reset() {
 
 //// Determine angle for robot to steer in (after adding conditional noise)
 double WithinLastFRobot::get_travel_angle() {
-  return angle_to_goal() + (frustrated_samples_left > 0 ? Random::get_normal_double(anglebias, anglenoise) : 0);
+  if (anglenoise == -1) {return Random::get_unif_double(-M_PI, M_PI);}
+  else {return angle_to_goal() + (frustrated_samples_left > 0 || frustration_len == 0 ? Random::get_normal_double(anglebias, anglenoise) : 0);}
 }
 
 void WithinLastFRobot::member_update() {

@@ -1,9 +1,7 @@
 # The Stage Simulator
 
 These are modifications made to the original [Stage simulator](https://github.com/rtv/Stage)
-
 ----------
-
 This is the Stage README file, containing an introduction, license and citation information. Stage is a 2(.5)D robotics standalone simulator and can also be used as a C++ library to build your own simulation environment. Up-to-date **documentation can be found [here](https://codedocs.xyz/CodeFinder2/Stage/)**.
 
 For release notes see RELEASE.txt
