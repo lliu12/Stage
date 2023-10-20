@@ -44,13 +44,7 @@ floorplan
 define agent pioneer2dx
 (		 
 
-#  ctrl "circle_random_goals.0 -s .5 -m 1 -a .1 -c .3 -t -1 -l 0 -u 8 -n true"
-
-   ctrl "noise_with_memory_vector.0 -s .5 -c .3 -l 0 -u 8 -a 2 -b 0 -r 40 -t 40 -n true --mem 1 --circle"
-
-# ctrl "noise_random_goals.0 -s .5 -c .3 -l 0 -u 8 -a 1 -b 0 -r 40 -t 40 -n true --df_blocked 1 --df_free -.9 --f_threshold 20 --random_runsteps --circle"
-
-# ctrl "noise_random_goals.0 -s .5 -c .3 -l 0 -u 8 -a .5 -b 0 -r 40 -t 40 -n true --df_blocked 0 --df_free 0 --f_threshold 20 --circle"
+  ctrl "within_last_f_robot.0 -s .8 -c .3 -u 8 -r 40 -t 40 -a -1 -b 0 -f 0 --random_runsteps --circle -n"
 
   sicklaser( pose [ 0.000 0.000 0.000 0.000 ] ) 
 

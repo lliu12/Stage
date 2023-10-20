@@ -95,7 +95,7 @@ void DataCollector::SimWorldCountBlocked(World *world, int trials) {
 
 // Simulate a world. At sample steps, record which robots are stopped and all robots blocking them.
 void DataCollector::SimWorldRecordStoppedRobots(World *world, int trials, bool save_positions) {
-    int total_robots = CountNumRobots(world);
+
     std::string world_addtl_data = GetAddtlData(world);
     for (int trial = 0; trial < trials; trial++) {
         bool done = false;
@@ -124,6 +124,11 @@ void DataCollector::SimWorldRecordStoppedRobots(World *world, int trials, bool s
                         }
 
                         else {
+                            if (robot->fiducial->GetFiducials().size() == 0) {
+                                printf("Error: Robot stopped but nothing in fiducials.... \n");
+                                printf("Sim time: %llu, Robot ID: %i \n", world->SimTimeNow(), (*m)->GetFiducialReturn());
+                            }
+
                             FOR_EACH (it, robot->fiducial->GetFiducials()) {
                                 ModelFiducial::Fiducial *other = &(*it);
                                 if (other->range < robot->stopdist) {
@@ -156,7 +161,7 @@ void DataCollector::SimWorldRecordStoppedRobots(World *world, int trials, bool s
 
 // Simulate a world. At sample steps, record which robots are stopped and the single closest robot blocking them.
 void DataCollector::SimWorldRecordStoppedRobotsClosest(World *world, int trials, bool save_positions) {
-    int total_robots = CountNumRobots(world);
+    // int total_robots = CountNumRobots(world);
     std::string world_addtl_data = GetAddtlData(world);
     for (int trial = 0; trial < trials; trial++) {
         bool done = false;

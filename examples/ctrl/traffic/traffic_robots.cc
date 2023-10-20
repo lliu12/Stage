@@ -17,6 +17,7 @@ BaseRobot::BaseRobot(Model *mod, CtrlArgs *args) {
     periodic = pos->GetWorld()->IsPeriodic();
     pos->SetColor(Color::RandomColor());
     goal_birth_time = pos->GetWorld()->SimTimeNow();
+    stop = 0; // Right when a robot is turned on, it has not sensed anything yet. 
     closest = NULL;
 
     // Set up sensors
@@ -151,6 +152,7 @@ void BaseRobot::reset() {
     goals_reached = 0;
     goal_birth_time = pos->GetWorld()->SimTimeNow();
     closest = NULL;
+    stop = 0;
 
     // get new start goal locations 
     gen_start_goal_positions();
