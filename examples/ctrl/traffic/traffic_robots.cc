@@ -332,39 +332,6 @@ void NoiseRobot::motion_update() {
     pos->SetTurnSpeed(turnspeed * a_error);
   }
   current_phase_count++;
-
-
-
-  // // check if current run or tumble phase is over
-  // if (current_phase_count >= (running ? runsteps : tumblesteps)) {
-  //   running = !running;
-  //   current_phase_count = 0;
-  // }
-
-  // if (current_phase_count == 0) {
-  //   // if a new run phase is beginning, get random runlength between 1/2 and 3/2 of provided runsteps
-  //   if (random_runsteps && running) {
-  //     int lower = std::round(avg_runsteps / 2);
-  //     int higher = std::round(3 * avg_runsteps / 2);
-  //     runsteps = Random::get_unif_int(lower, higher);
-  //   }
-
-  //   // if a new tumble phase is beginning, set goal angle
-  //   if (!running && current_phase_count == 0) {
-  //     travel_angle = get_travel_angle();
-  //   }
-  // }
-
-  // if (running) {
-  //   pos->SetXSpeed(stop ? 0 : cruisespeed);
-  //   pos->SetTurnSpeed(0);
-  // }
-  // else {
-  //   double a_error = normalize(travel_angle - pos->GetPose().a);
-  //   pos->SetTurnSpeed(a_error);
-  //   pos->SetXSpeed(0);
-  // }
-  // current_phase_count++;
 }
 
 
