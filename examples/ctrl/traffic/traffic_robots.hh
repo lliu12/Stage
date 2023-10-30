@@ -80,7 +80,7 @@ class BaseRobot {
 class NoiseRobot : public BaseRobot {
   public:
     bool running; // is robot currently in run phase
-    int current_phase_count, avg_runsteps, runsteps, tumblesteps; // time so far spent running or tumbling, total length of a run or tumble period
+    int current_phase_count, avg_runsteps, runsteps, turnspeed; // time so far spent running or tumbling, total length of a run or tumble period
     double anglenoise, travel_angle, anglebias; // amount of noise and bias to add to random angles
     bool random_runsteps; // randomly vary length of run phases
 

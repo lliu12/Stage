@@ -257,7 +257,7 @@ void BaseRobot::motion_update() {
 // Define NoiseRobot class functions
 
 NoiseRobot::NoiseRobot(Model *mod, CtrlArgs *args) : BaseRobot(mod, args) {
-  running = false;
+  // running = false;
   current_phase_count = 0;
 }
 
@@ -267,11 +267,11 @@ NoiseRobot::~NoiseRobot(void){}
 void NoiseRobot::add_options(cxxopts::Options *options_wf) {
   BaseRobot::add_options(options_wf);
   options_wf->add_options()
-    ("a, anglenoise", "STD when random noise is added to tumble goal angles", cxxopts::value<double>()->default_value("0"))
+    ("a, anglenoise", "STD of Gaussian random noise is added to tumble goal angles. Use -1 for uniform noise.", cxxopts::value<double>()->default_value("0"))
     ("b, bias", "Bias of noise added to angles", cxxopts::value<double>()->default_value("0"))
     ("r, runsteps", "Total steps in a run phase", cxxopts::value<int>())
     ("random_runsteps", "Randomize runsteps each phase (average is the runsteps passed above)", cxxopts::value<bool>()) // implicit value is true
-    ("t, tumblesteps", "Total steps in a tumble phase", cxxopts::value<int>())
+    ("t, turnspeed", "Speed multiplier for robots' turns to goal angles. Use -1 for instantaneous turning.", cxxopts::value<int>())
     ;
 }
 
@@ -282,13 +282,13 @@ void NoiseRobot::fill_in_params(cxxopts::ParseResult result_wf) {
   runsteps = result_wf["runsteps"].as<int>();
   avg_runsteps = result_wf["runsteps"].as<int>();
   random_runsteps = result_wf["random_runsteps"].as<bool>();
-  tumblesteps = result_wf["tumblesteps"].as<int>();
+  turnspeed = result_wf["turnspeed"].as<int>();
 
 }
 
 void NoiseRobot::reset() {
   BaseRobot::reset();
-  running = false;
+  // running = false;
   current_phase_count = 0;
 }
 
@@ -300,9 +300,8 @@ double NoiseRobot::get_travel_angle() {
 
 //// Set robot speed and turning angle
 void NoiseRobot::motion_update() {
-  // check if current run or tumble phase is over
-  if (current_phase_count >= (running ? runsteps : tumblesteps)) {
-    running = !running;
+  // check if current run phase is over
+  if (current_phase_count >= runsteps) {
     current_phase_count = 0;
   }
 
@@ -314,22 +313,58 @@ void NoiseRobot::motion_update() {
       runsteps = Random::get_unif_int(lower, higher);
     }
 
-    // if a new tumble phase is beginning, set goal angle
-    if (!running && current_phase_count == 0) {
-      travel_angle = get_travel_angle();
+    // also get travel angle
+    travel_angle = get_travel_angle();
+
+    // for instantaneous turning, set robot to travel angle
+    if (turnspeed == -1) {
+      Pose cur_pos = pos->GetPose();
+      pos->SetGlobalPose(Pose(cur_pos.x, cur_pos.y, cur_pos.z, travel_angle));
+      pos->SetTurnSpeed(0);
     }
   }
 
-  if (running) {
-    pos->SetXSpeed(stop ? 0 : cruisespeed);
-    pos->SetTurnSpeed(0);
-  }
-  else {
+  pos->SetXSpeed(stop ? 0 : cruisespeed);
+
+  // for non-instantaneous turning, set turnspeed
+  if (turnspeed != -1) {
     double a_error = normalize(travel_angle - pos->GetPose().a);
-    pos->SetTurnSpeed(a_error);
-    pos->SetXSpeed(0);
+    pos->SetTurnSpeed(turnspeed * a_error);
   }
   current_phase_count++;
+
+
+
+  // // check if current run or tumble phase is over
+  // if (current_phase_count >= (running ? runsteps : tumblesteps)) {
+  //   running = !running;
+  //   current_phase_count = 0;
+  // }
+
+  // if (current_phase_count == 0) {
+  //   // if a new run phase is beginning, get random runlength between 1/2 and 3/2 of provided runsteps
+  //   if (random_runsteps && running) {
+  //     int lower = std::round(avg_runsteps / 2);
+  //     int higher = std::round(3 * avg_runsteps / 2);
+  //     runsteps = Random::get_unif_int(lower, higher);
+  //   }
+
+  //   // if a new tumble phase is beginning, set goal angle
+  //   if (!running && current_phase_count == 0) {
+  //     travel_angle = get_travel_angle();
+  //   }
+  // }
+
+  // if (running) {
+  //   pos->SetXSpeed(stop ? 0 : cruisespeed);
+  //   pos->SetTurnSpeed(0);
+  // }
+  // else {
+  //   double a_error = normalize(travel_angle - pos->GetPose().a);
+  //   pos->SetTurnSpeed(a_error);
+  //   pos->SetXSpeed(0);
+  // }
+  // current_phase_count++;
 }
 
 
